@@ -22,4 +22,15 @@ name = "rust-exer"
 version = "0.1.0"
 edition = "2021"
 
+keywords = ["exercise", "learning"]
+include = [
+  "/src/",
+  "/exercises/",
+  "/solutions/",
+  # A symlink to be able to include `dev/Cargo.toml` although `dev` is excluded.
+  "/dev-Cargo.toml",
+  "/README.md",
+  "/LICENSE",
+]
+
 [dependencies]
