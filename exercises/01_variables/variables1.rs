@@ -7,7 +7,7 @@ fn main() {
 }
 
 fn expect_value() {
-    let guess = "42".parse().expect("Not a number");
+    let guess: u32 = "42".parse().expect("Not a number");
 
     println!("guess: {guess}");
 }
