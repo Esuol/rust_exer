@@ -30,26 +30,27 @@ fn main() {
         Ok(output) => {
             if output.status.success() {
                 // 编译成功，运行程序
-                let run_result = Command::new("./temp_exercise").output();
+                println!("编译成功，开始运行程序...");
+                println!("----------------------------------------");
+
+                let run_result = Command::new("./temp_exercise").spawn();
+
                 match run_result {
-                    Ok(run_output) => {
-                        // 检查程序是否成功运行
-                        if run_output.status.success() {
-                            println!("输出:");
-                            println!("{}", String::from_utf8_lossy(&run_output.stdout));
-                            if !run_output.stderr.is_empty() {
-                                println!("警告:");
-                                println!("{}", String::from_utf8_lossy(&run_output.stderr));
+                    Ok(mut child) => {
+                        println!("child: {:?}", child.id());
+                        // 等待程序执行完毕
+                        let status = child.wait();
+                        match status {
+                            Ok(exit_status) => {
+                                println!("----------------------------------------");
+                                if exit_status.success() {
+                                    println!("程序执行成功");
+                                } else {
+                                    println!("程序执行失败 (退出码: {})", exit_status);
+                                }
                             }
-                        } else {
-                            println!("程序运行失败 (退出码: {})", run_output.status);
-                            if !run_output.stdout.is_empty() {
-                                println!("标准输出:");
-                                println!("{}", String::from_utf8_lossy(&run_output.stdout));
-                            }
-                            if !run_output.stderr.is_empty() {
-                                println!("错误输出:");
-                                println!("{}", String::from_utf8_lossy(&run_output.stderr));
+                            Err(e) => {
+                                println!("等待程序执行时出错: {}", e);
                             }
                         }
                     }
