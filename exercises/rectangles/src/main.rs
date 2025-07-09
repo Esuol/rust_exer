@@ -1,7 +1,11 @@
+pub mod enums;
+
 fn main() {
     run_struct();
 
     run_enum();
+
+    enums::run_enum();
 }
 
 fn area(width: u32, height: u32) -> u32 {
