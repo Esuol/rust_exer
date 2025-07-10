@@ -6,6 +6,8 @@ fn main() {
     run_enum();
 
     enums::run_enum();
+
+    enums::run_plus_one();
 }
 
 fn area(width: u32, height: u32) -> u32 {
