@@ -8,6 +8,10 @@ fn main() {
     enums::run_enum();
 
     enums::run_plus_one();
+
+    run_scope();
+
+    run_vec();
 }
 
 fn area(width: u32, height: u32) -> u32 {
@@ -191,4 +195,50 @@ fn run_enum() {
     println!("orange is: {orange}");
 
     println!("fruit is: {apple}");
+}
+
+fn run_scope() {
+    let mut a = 10;
+
+    let b = &mut a;
+
+    *b = 20;
+
+    println!("b is {b}"); // 先使用 b
+
+    println!("a is {a}"); // 然后使用 a
+
+    let c = &a; // 现在可以安全地创建不可变借用
+
+    println!("c is {c}");
+}
+
+fn run_vec() {
+    let mut v = vec![1, 2, 3, 4, 5];
+
+    let third = &v[2];
+
+    println!("The third element is {third}");
+    println!("The third element is {}", third);
+    println!("The third element is {:p}", third);
+
+    let third = v.get(2);
+
+    match third {
+        Some(third) => println!("The third element is {third}"),
+        None => println!("There is no third element"),
+    }
+
+    v.push(6);
+
+    println!("v is {v:?}");
+
+    let third = v.get(2);
+    let third_ref = if let Some(third) = third { third } else { &0 };
+    let plus_third = *third_ref + 1;
+    let plus_third_ref = third_ref + 1;
+
+    println!("The third element is {third_ref}");
+    println!("The plus third element is {plus_third}");
+    println!("The plus third element is {plus_third_ref}");
 }
