@@ -26,6 +26,31 @@ fn value_in_cents(coin: Coin) -> u8 {
     }
 }
 
+impl UsState {
+    fn existed_in(&self, year: u32) -> bool {
+        match self {
+            UsState::Alabama => year >= 1861,
+            UsState::Alaska => year >= 1959,
+            UsState::Arizona => year >= 1912,
+            UsState::Arkansas => year >= 1836,
+            UsState::California => year >= 1850,
+        }
+    }
+}
+
+fn describe_state_quarter(coin: Coin) -> Option<String> {
+    let state = if let Coin::Quarter(state) = coin {
+        state
+    } else {
+        return None;
+    };
+    if state.existed_in(1861) {
+        Some(format!("{state:?} is pretty old, for America!"))
+    } else {
+        Some(format!("{state:?} is relatively new."))
+    }
+}
+
 pub fn run_enum() {
     let value = value_in_cents(Coin::Quarter(UsState::Alabama));
 
@@ -34,6 +59,10 @@ pub fn run_enum() {
     println!("The value of the coin is {} cents.", value);
 
     println!("The value2 of the coin is {} cents.", value2);
+
+    let state_quarter = describe_state_quarter(Coin::Quarter(UsState::Alabama));
+
+    println!("State quarter is {:?}", state_quarter);
 }
 
 pub fn plus_one(x: Option<i32>) -> Option<i32> {
