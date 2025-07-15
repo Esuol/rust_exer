@@ -12,6 +12,8 @@ fn main() {
     run_scope();
 
     run_vec();
+
+    run_str();
 }
 
 fn area(width: u32, height: u32) -> u32 {
@@ -241,4 +243,24 @@ fn run_vec() {
     println!("The third element is {third_ref}");
     println!("The plus third element is {plus_third}");
     println!("The plus third element is {plus_third_ref}");
+}
+
+fn run_str() {
+    for c in "Зд".chars() {
+        println!("{c}");
+    }
+
+    let hello = "Здравствуйте";
+
+    let s = &hello[0..4];
+
+    println!("s is {s}");
+
+    //  panic
+    // let s1 = &hello[0..1];
+    // println!("s1 is {s1}");
+
+    for b in "Зд".bytes() {
+        println!("{b}");
+    }
 }
