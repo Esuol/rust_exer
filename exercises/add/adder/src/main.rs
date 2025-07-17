@@ -1,7 +1,15 @@
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::ErrorKind;
+use std::io::Read;
+
 fn main() {
     let num = 10;
     println!("Hello, world! {num} plus one is {}!", add_one::add_one(num));
     run_str();
+    run_hash_map();
+    run_result();
+    run_result_2();
 }
 
 fn run_str() {
@@ -24,4 +32,72 @@ fn run_str() {
     let s = format!("{s1}-{s2}-{s3}");
     println!("s is {s}");
     println!("s 的类型: {}", std::any::type_name_of_val(&s));
+}
+
+fn run_hash_map() {
+    let mut scores = HashMap::new();
+    scores.insert(String::from("Blue"), 10);
+    scores.insert(String::from("Yellow"), 50);
+    scores.entry(String::from("Blue")).or_insert(25);
+    scores.entry(String::from("Red")).or_insert(50);
+
+    let team_name = String::from("Blue");
+    let score = scores.get(&team_name).copied().unwrap_or(0);
+    println!("score is {score}");
+
+    for (key, value) in &scores {
+        println!("{key}: {value}");
+    }
+
+    let text = "hello world wonderful world";
+
+    let mut word_map = HashMap::new();
+
+    for word in text.split_whitespace() {
+        let count: &mut i32 = word_map.entry(word).or_insert(0);
+        *count += 1;
+    }
+
+    println!("{:?}", word_map);
+}
+
+fn run_result() {
+    let greeting_file_result = File::open("./hello.txt");
+
+    match greeting_file_result {
+        Ok(mut file) => {
+            println!("File opened successfully!");
+            // 这里可以处理文件
+            let mut file_content = String::new();
+            file.read_to_string(&mut file_content).unwrap();
+            println!("File content: {file_content}");
+        }
+        Err(e) => {
+            println!("Could not open file: {e}");
+            println!("Creating a new file...");
+
+            // 创建文件
+            match File::create("./hello.txt") {
+                Ok(_) => println!("File created successfully!"),
+                Err(e) => println!("Could not create file: {e}"),
+            }
+        }
+    };
+}
+
+fn run_result_2() {
+    let greeting_file_result = File::open("./hello2.txt");
+
+    let greeting_file = match greeting_file_result {
+        Ok(file) => file,
+        Err(error) => match error.kind() {
+            ErrorKind::NotFound => match File::create("./hello2.txt") {
+                Ok(file) => file,
+                Err(e) => panic!("Problem creating the file: {e}"),
+            },
+            _ => {
+                panic!("Problem opening the file: {error:?}");
+            }
+        },
+    };
 }
