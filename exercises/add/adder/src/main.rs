@@ -12,8 +12,8 @@ fn main() {
     run_result_2();
 
     match run_result_3() {
-        Ok(username) => println!("username: {}", username),
-        Err(e) => println!("Error reading file: {}", e),
+        Ok(username) => println!("Final username: {}", username),
+        Err(e) => println!("Error: {}", e),
     }
 }
 
@@ -108,17 +108,25 @@ fn run_result_2() {
 }
 
 fn run_result_3() -> Result<String, std::io::Error> {
-    let greeting_file_result = File::open("./hello2.txt");
+    let greeting_file_result = File::open("./hell12.txt");
 
     let mut username_file = match greeting_file_result {
         Ok(file) => file,
-        Err(e) => return Err(e),
+        Err(_) => {
+            println!("File not found, using default");
+            return Ok(String::from("default"));
+        }
     };
 
     let mut username = String::new();
 
-    match username_file.read_to_string(&mut username) {
+    let c = match username_file.read_to_string(&mut username) {
         Ok(_) => Ok(username),
         Err(e) => Err(e),
     }
+    .unwrap_or_else(|_| String::from("default"));
+
+    println!("username: {c}");
+
+    Ok(c)
 }
