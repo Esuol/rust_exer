@@ -10,6 +10,11 @@ fn main() {
     run_hash_map();
     run_result();
     run_result_2();
+
+    match run_result_3() {
+        Ok(username) => println!("username: {}", username),
+        Err(e) => println!("Error reading file: {}", e),
+    }
 }
 
 fn run_str() {
@@ -100,4 +105,20 @@ fn run_result_2() {
             }
         },
     };
+}
+
+fn run_result_3() -> Result<String, std::io::Error> {
+    let greeting_file_result = File::open("./hello2.txt");
+
+    let mut username_file = match greeting_file_result {
+        Ok(file) => file,
+        Err(e) => return Err(e),
+    };
+
+    let mut username = String::new();
+
+    match username_file.read_to_string(&mut username) {
+        Ok(_) => Ok(username),
+        Err(e) => Err(e),
+    }
 }
