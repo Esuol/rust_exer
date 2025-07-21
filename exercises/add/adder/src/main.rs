@@ -130,3 +130,12 @@ fn run_result_3() -> Result<String, std::io::Error> {
 
     Ok(c)
 }
+
+fn run_result_4() {
+    let greeting_file_result = File::open("./hello2.txt");
+
+    let greeting_file = match greeting_file_result {
+        Ok(file) => file,
+        Err(e) => panic!("Problem opening the file: {e}"),
+    };
+}
