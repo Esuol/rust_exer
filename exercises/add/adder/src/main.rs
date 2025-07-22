@@ -3,8 +3,10 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::ErrorKind;
 use std::io::Read;
+use summary::{NewsArticle, SocialPost, Summary};
 
 mod guess;
+mod summary;
 
 fn main() {
     let num = 10;
@@ -20,6 +22,18 @@ fn main() {
     }
 
     run_guess();
+
+    let number_list = vec![34, 50, 25, 100, 65];
+
+    let result = largest(&number_list);
+    println!("The largest number is {result}");
+
+    let char_list = vec!['y', 'm', 'a', 'q'];
+
+    let result = largest(&char_list);
+    println!("The largest char is {result}");
+
+    run_summary();
 }
 
 fn run_str() {
@@ -143,4 +157,36 @@ fn run_result_4() {
         Ok(file) => file,
         Err(e) => panic!("Problem opening the file: {e}"),
     };
+}
+
+pub fn largest<T: std::cmp::PartialOrd>(list: &[T]) -> &T {
+    let mut largest = &list[0];
+
+    for item in list {
+        if item > largest {
+            largest = item;
+        }
+    }
+
+    largest
+}
+
+fn run_summary() {
+    let post = SocialPost {
+        username: String::from("horse_ebooks"),
+        content: String::from("of course, as you probably already know, people"),
+        reply: false,
+        retweet: false,
+    };
+
+    println!("1 new post: {}", post.summarize());
+
+    let article = NewsArticle {
+        headline: String::from("Penguins win the Stanley Cup Championship!"),
+        location: String::from("Pittsburgh, PA, USA"),
+        author: String::from("Iceburgh"),
+        content: String::from("The Pittsburgh Penguins once again are the best"),
+    };
+
+    println!("New article available! {}", article.summarize());
 }
