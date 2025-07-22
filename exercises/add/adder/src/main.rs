@@ -1,7 +1,10 @@
+use guess::run_guess;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::ErrorKind;
 use std::io::Read;
+
+mod guess;
 
 fn main() {
     let num = 10;
@@ -15,6 +18,8 @@ fn main() {
         Ok(username) => println!("Final username: {}", username),
         Err(e) => println!("Error: {}", e),
     }
+
+    run_guess();
 }
 
 fn run_str() {
