@@ -1,4 +1,5 @@
 use guess::run_guess;
+use pair::Pair;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::ErrorKind;
@@ -6,6 +7,7 @@ use std::io::Read;
 use summary::{NewsArticle, SocialPost, Summary};
 
 mod guess;
+mod pair;
 mod summary;
 
 fn main() {
@@ -189,4 +191,9 @@ fn run_summary() {
     };
 
     println!("New article available! {}", article.summarize());
+}
+
+fn run_pair() {
+    let pair = Pair::new(1, 2);
+    pair.cmp_display();
 }
