@@ -230,3 +230,8 @@ fn run_result_6() {
         }
     });
 }
+
+fn run_result_7() {
+    let f = File::open("hello.txt").unwrap();
+    let f = File::open("hello.txt").expect("Failed to open hello.txt");
+}
