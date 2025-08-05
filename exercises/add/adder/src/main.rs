@@ -265,6 +265,14 @@ where
     }
 }
 
+fn run_longest_with_an_announcement() {
+    let string1 = String::from("abcd");
+    let string2 = "xyz";
+
+    let result = longest_with_an_announcement(string1.as_str(), string2, 42);
+    println!("The longest string is {result}");
+}
+
 fn run_longest() {
     let string1 = String::from("abcd");
     let string2 = "xyz";
