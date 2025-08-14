@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 exclude = ["tests/test_exercises", "dev"]
-members = ["exercises/rectangles", "exercises/restaurant"]
+members = ["exercises/rectangles", "exercises/restaurant", "exercises/str_exam"]
 
 [workspace.package]
 version = "0.1.1"
