@@ -17,3 +17,7 @@ version = "0.1.0"
 [[package]]
 name = "str_exam"
 version = "0.1.1"
+
+[[package]]
+name = "utils"
+version = "0.1.1"
