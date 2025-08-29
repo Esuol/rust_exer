@@ -19,6 +19,10 @@ name = "rust-exer"
 version = "0.1.0"
 
 [[package]]
+name = "rust-image-processor"
+version = "0.1.1"
+
+[[package]]
 name = "str_exam"
 version = "0.1.1"
 
