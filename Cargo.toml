@@ -1,12 +1,14 @@
 [workspace]
 resolver = "2"
-exclude = ["tests/test_exercises", "dev"]
+exclude = ["tests/test_exercises", "dev", "utils/rust-image-processor"]
 members = [
   "exercises/desk",
   "exercises/rectangles",
   "exercises/restaurant",
   "exercises/str_exam",
-  "exercises/utils", "utils/rust-image-processor",
+  "utils/serde",
+  "web/api-gateway",
+  "web/iam",
 ]
 
 [workspace.package]
@@ -32,7 +34,6 @@ edition = "2021"
 keywords = ["exercise", "learning"]
 include = [
   "/src/",
-  "/utils/",
   "/exercises/",
   "/solutions/",
   # A symlink to be able to include `dev/Cargo.toml` although `dev` is excluded.

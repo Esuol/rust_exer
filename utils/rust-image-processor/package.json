@@ -1,12 +1,25 @@
 {
   "name": "rust-image-processor",
   "version": "1.0.0",
-  "description": "",
+  "description": "Rust image processor Node.js native addon",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "napi build --release",
+    "build:debug": "napi build",
+    "test": "node src/test.js"
   },
-  "keywords": [],
+  "napi": {
+    "binaryName": "rust-image-processor",
+    "targets": [
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-unknown-linux-gnu",
+      "aarch64-linux-android",
+      "x86_64-pc-windows-msvc",
+      "i686-pc-windows-msvc"
+    ]
+  },
+  "keywords": ["rust", "image", "native", "addon", "napi"],
   "author": "",
   "license": "ISC"
 }
