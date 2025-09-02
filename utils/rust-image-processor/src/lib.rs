@@ -103,4 +103,6 @@ pub fn get_file_size(image_path: String) -> Result<u64> {
             format!("Failed to read file metadata: {}", e),
         )
     })?;
+
+    Ok(metadata.len())
 }
