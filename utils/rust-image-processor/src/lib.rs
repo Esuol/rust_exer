@@ -93,3 +93,14 @@ pub fn check_image_file(image_path: String) -> Result<bool> {
         None => Ok(false),
     }
 }
+
+/// 文件大小
+#[napi]
+pub fn get_file_size(image_path: String) -> Result<u64> {
+    let metadata = fs::metadata(&image_path).map_err(|e| {
+        Error::new(
+            Status::GenericFailure,
+            format!("Failed to read file metadata: {}", e),
+        )
+    })?;
+}
