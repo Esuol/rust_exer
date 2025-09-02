@@ -80,3 +80,16 @@ pub fn get_file_size(image_path: String) -> Result<u64> {
 
     Ok(metadata.len())
 }
+
+/// 检查文件是否是图片
+#[napi]
+pub fn check_image_file(image_path: String) -> Result<bool> {
+    let path = Path::new(&image_path);
+    let extension = path
+        .extension()
+        .map(|ext| ext.to_string_lossy().to_string());
+    match extension {
+        Some(ext) => Ok(ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "gif"),
+        None => Ok(false),
+    }
+}
