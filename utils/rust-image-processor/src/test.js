@@ -17,11 +17,11 @@ try {
 
   // 测试文件相关函数
   const testFile = './src/test.js';
-  console.log(`File exists (${testFile}):`, rustAddon.check_image_exists(testFile));
+  console.log(`File exists (${testFile}):`, rustAddon.checkImageExists(testFile));
 
   // 测试获取文件大小
   try {
-    const fileSize = rustAddon.get_file_size(testFile);
+    const fileSize = rustAddon.getFileSize(testFile);
     console.log(`File size (${testFile}):`, fileSize, 'bytes');
   } catch (error) {
     console.log('File size error:', error.message);
@@ -29,7 +29,7 @@ try {
 
   // 测试获取文件扩展名
   try {
-    const ext = rustAddon.get_image_extension('test.jpg');
+    const ext = rustAddon.getImageExtension('test.jpg');
     console.log('File extension:', ext);
   } catch (error) {
     console.log('Extension error:', error.message);

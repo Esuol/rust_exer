@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib"] # 生成动态库供其他语言调用
 
 [dependencies]
 napi = { version = "3.2.4", default-features = false, features = ["napi8"] }
