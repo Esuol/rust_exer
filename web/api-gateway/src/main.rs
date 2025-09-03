@@ -1,4 +1,5 @@
-use rocket::{get, launch, routes};
+use rocket::{get, launch, post, routes};
+use std::path::PathBuf;
 
 #[get("/")]
 fn index() -> &'static str {
@@ -10,7 +11,21 @@ fn health() -> &'static str {
     "OK"
 }
 
+#[post("/proxy/<path..>")]
+async fn proxy(path: PathBuf) -> Result<String, rocket::http::Status> {
+    let target_url = format!("http://httpbin.org/{}", path.display());
+    let client = reqwest::Client::new();
+
+    match client.get(&target_url).send().await {
+        Ok(response) => match response.text().await {
+            Ok(text) => Ok(text),
+            Err(_) => Err(rocket::http::Status::InternalServerError),
+        },
+        Err(_) => Err(rocket::http::Status::BadGateway),
+    }
+}
+
 #[launch] // entry point 启动宏
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![index, health]) // 注册路由
+    rocket::build().mount("/", routes![index, health, proxy]) // 注册路由
 }
