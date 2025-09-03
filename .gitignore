@@ -1,3 +1,7 @@
 /target
 
 /utils/rust-image-processor/target
+
+/web/api-gateway/target
+
+
