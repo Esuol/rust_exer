@@ -1,5 +1,29 @@
-use rocket::{get, launch, post, routes};
+use chrono::{DateTime, Utc};
+use rocket::{get, launch, post, routes, serde::json::Json};
 use std::path::PathBuf;
+use sysinfo::{CpuExt, MemoryExt, System, SystemExt};
+
+// 健康检查响应结构体
+#[derive(serde::Serialize)] //  自动生成JSON序列化代码
+struct HealthResponse {
+    status: String,
+    timestamp: String,
+    uptime: String,
+    memory: MemoryInfo,
+    cpu: CpuInfo,
+}
+
+#[derive(serde::Serialize)]
+struct MemoryInfo {
+    used_mb: f64,
+    total_mb: f64,
+    usage_percentage: f64,
+}
+
+#[derive(serde::Serialize)]
+struct CpuInfo {
+    usage_percentage: f64,
+}
 
 #[get("/")]
 fn index() -> &'static str {
