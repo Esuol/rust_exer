@@ -14,6 +14,7 @@ fn health() -> &'static str {
 #[post("/proxy/<path..>")]
 async fn proxy(path: PathBuf) -> Result<String, rocket::http::Status> {
     let target_url = format!("http://httpbin.org/{}", path.display());
+    println!("target_url: {}", target_url);
     let client = reqwest::Client::new();
 
     match client.get(&target_url).send().await {
