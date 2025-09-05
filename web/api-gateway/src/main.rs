@@ -2,6 +2,12 @@ use chrono::Utc;
 use rocket::{get, launch, post, routes, serde::json::Json};
 use std::path::PathBuf;
 use sysinfo::{Cpu, System};
+// 添加一个静态变量记录启动时间
+// 改为使用 OnceLock
+use std::sync::OnceLock;
+use std::time::Instant;
+
+static START_TIME: OnceLock<Instant> = OnceLock::new();
 
 // 健康检查响应结构体
 #[derive(serde::Serialize)] //  自动生成JSON序列化代码
@@ -62,8 +68,14 @@ fn health() -> Json<HealthResponse> {
         usage_percentage: (cpu_usage * 100.0).round() / 100.0,
     };
 
-    // 计算运行时间（这里简化为当前时间，后面可以改进）
-    let uptime = "00:00:00".to_string(); // 暂时用固定值，后面再改进
+    // 计算运行时间
+    let uptime_seconds = START_TIME.get().unwrap().elapsed().as_secs();
+    let uptime = format!(
+        "{:02}:{:02}:{:02}",
+        uptime_seconds / 3600,
+        (uptime_seconds % 3600) / 60,
+        uptime_seconds % 60
+    );
 
     // 构建响应
     let response = HealthResponse {
@@ -92,7 +104,10 @@ async fn proxy(path: PathBuf) -> Result<String, rocket::http::Status> {
     }
 }
 
-#[launch] // entry point 启动宏
+#[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![index, health, proxy]) // 注册路由
+    // 初始化启动时间
+    START_TIME.set(Instant::now()).unwrap();
+
+    rocket::build().mount("/", routes![index, health, proxy])
 }
