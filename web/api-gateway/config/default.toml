@@ -1,0 +1,13 @@
+[server]
+host = "127.0.0.1"
+port = 8000
+workers = 4
+max_connections = 10000
+
+[logging]
+level = "info"
+format = "json"
+file_path = "logs/api-gateway.log"
+
+[routes]
+default_timeout = 30
