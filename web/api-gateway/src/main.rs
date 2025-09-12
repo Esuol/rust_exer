@@ -219,5 +219,6 @@ fn rocket() -> _ {
             workers: config.server.workers,
             ..Default::default()
         })
+        .manage(config) // 添加状态管理
         .mount("/", routes![index, health, proxy])
 }
