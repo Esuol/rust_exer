@@ -1,11 +1,14 @@
 use chrono::Utc;
 use rocket::{get, launch, post, routes, serde::json::Json, State};
 use std::path::PathBuf;
-use sysinfo::{Cpu, System};
+use sysinfo::System;
 // 添加一个静态变量记录启动时间
 // 改为使用 OnceLock
-use log::{debug, LevelFilter};
+use log::LevelFilter;
 use serde::Deserialize;
+// AtomicUsize: 线程安全的计数器，用于轮询算法
+// Ordering: 内存顺序保证
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
@@ -37,7 +40,8 @@ struct CpuInfo {
 struct AppConfig {
     server: ServerConfig,
     logging: LoggingConfig,
-    routes: RoutesConfig, // 添加路由配置
+    #[serde(default)]
+    routes: Vec<RouteConfig>, // 直接使用Vec<RouteConfig>，提供默认值
 }
 
 #[derive(Debug, Deserialize)]
@@ -50,6 +54,7 @@ struct ServerConfig {
 #[derive(Debug, Deserialize)]
 struct LoggingConfig {
     level: String,
+    #[allow(dead_code)]
     format: String,
 }
 
@@ -57,14 +62,18 @@ struct LoggingConfig {
 struct RouteConfig {
     path: String,
     method: String,
-    upstream: String,
+    upstreams: Vec<UpstreamServer>, // 支持多个上游服务器
     timeout: u64,
+    load_balance: String, // 负载均衡算法："round_robin", "weighted", "least_conn"
 }
 
 #[derive(Debug, Deserialize)]
-struct RoutesConfig {
-    routes: Vec<RouteConfig>,
+struct UpstreamServer {
+    url: String,
+    weight: u32, // 用于加权轮询
 }
+
+// 移除RoutesConfig，直接使用Vec<RouteConfig>
 
 #[get("/")]
 fn index() -> &'static str {
@@ -130,20 +139,31 @@ async fn proxy(path: PathBuf, config: &State<AppConfig>) -> Result<String, rocke
     let method = "GET"; // 暂时只支持GET，后面扩展
 
     // 查找匹配的路由
-    if let Some(route) = find_route(&config.routes.routes, &request_path, method) {
-        let client = reqwest::Client::new();
+    log::debug!(
+        "Looking for route: {} with method: {}",
+        request_path,
+        method
+    );
+    log::debug!("Available routes: {}", config.routes.len());
 
-        match client
-            .get(&route.upstream)
-            .timeout(Duration::from_secs(route.timeout))
-            .send()
-            .await
-        {
-            Ok(response) => match response.text().await {
-                Ok(text) => Ok(text),
-                Err(_) => Err(rocket::http::Status::InternalServerError),
-            },
-            Err(_) => Err(rocket::http::Status::BadGateway),
+    if let Some(route) = find_route(&config.routes, &request_path, method) {
+        log::debug!("Found matching route: {}", route.path);
+        if let Some(upstream) = select_upstream(route) {
+            let client = reqwest::Client::new();
+            match client
+                .get(&upstream.url) // 使用负载均衡选择的上游
+                .timeout(Duration::from_secs(route.timeout))
+                .send()
+                .await
+            {
+                Ok(response) => match response.text().await {
+                    Ok(text) => Ok(text),
+                    Err(_) => Err(rocket::http::Status::InternalServerError),
+                },
+                Err(_) => Err(rocket::http::Status::BadGateway),
+            }
+        } else {
+            Err(rocket::http::Status::ServiceUnavailable)
         }
     } else {
         Err(rocket::http::Status::NotFound)
@@ -196,6 +216,66 @@ fn find_route<'a>(routes: &'a [RouteConfig], path: &str, method: &str) -> Option
 
         route.method.split('|').any(|m| m.trim() == method)
     })
+}
+
+// 这是入口函数，根据算法选择不同的负载均衡策略
+fn select_upstream(route: &RouteConfig) -> Option<&UpstreamServer> {
+    if route.upstreams.is_empty() {
+        return None;
+    }
+
+    match route.load_balance.as_str() {
+        "round_robin" => select_round_robin(route),
+        "weighted" => select_weighted(route),
+        "least_conn" => select_least_conn(route),
+        _ => select_round_robin(route), // 默认使用轮询
+    }
+}
+
+// 实现轮询算法
+fn select_round_robin(route: &RouteConfig) -> Option<&UpstreamServer> {
+    // 使用静态原子计数器来跟踪轮询位置
+    // 这需要在文件顶部添加 static 变量
+    static ROUND_ROBIN_INDEX: AtomicUsize = AtomicUsize::new(0);
+
+    let current_index = ROUND_ROBIN_INDEX.fetch_add(1, Ordering::SeqCst);
+    let index = current_index % route.upstreams.len();
+
+    route.upstreams.get(index)
+}
+
+// 实现加权轮询算法
+fn select_weighted(route: &RouteConfig) -> Option<&UpstreamServer> {
+    // 简化实现：根据权重随机选择
+    // 你可以实现更复杂的算法
+    let total_weight: u32 = route.upstreams.iter().map(|s| s.weight).sum();
+
+    if total_weight == 0 {
+        return select_round_robin(route);
+    }
+
+    let mut random_weight = (std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos()
+        % total_weight as u128) as u32;
+
+    for server in &route.upstreams {
+        if random_weight < server.weight {
+            return Some(server);
+        }
+        random_weight -= server.weight;
+    }
+
+    // 兜底返回第一个
+    route.upstreams.first()
+}
+
+// 实现最少连接算法（简化版）
+fn select_least_conn(route: &RouteConfig) -> Option<&UpstreamServer> {
+    // 简化实现：随机选择
+    // 实际应该统计每个服务器的活跃连接数
+    select_round_robin(route)
 }
 
 #[launch]
