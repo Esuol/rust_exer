@@ -9,5 +9,20 @@ level = "info"
 format = "json"
 file_path = "logs/api-gateway.log"
 
-[routes]
-default_timeout = 30
+[[routes]]
+path = "/api/v1/users"
+method = "GET"
+upstream = "http://user-service:8080"
+timeout = 30
+
+[[routes]]
+path = "/api/v1/products"
+method = "GET|POST"
+upstream = "http://product-service:8080"
+timeout = 30
+
+[[routes]]
+path = "/api/v1/orders"
+method = "*"
+upstream = "http://order-service:8080"
+timeout = 60

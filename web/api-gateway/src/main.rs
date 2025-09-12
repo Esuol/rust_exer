@@ -1,5 +1,5 @@
 use chrono::Utc;
-use rocket::{get, launch, post, routes, serde::json::Json};
+use rocket::{get, launch, post, routes, serde::json::Json, State};
 use std::path::PathBuf;
 use sysinfo::{Cpu, System};
 // 添加一个静态变量记录启动时间
@@ -7,7 +7,7 @@ use sysinfo::{Cpu, System};
 use log::{debug, LevelFilter};
 use serde::Deserialize;
 use std::sync::OnceLock;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 static START_TIME: OnceLock<Instant> = OnceLock::new();
 
@@ -37,6 +37,7 @@ struct CpuInfo {
 struct AppConfig {
     server: ServerConfig,
     logging: LoggingConfig,
+    routes: RoutesConfig, // 添加路由配置
 }
 
 #[derive(Debug, Deserialize)]
@@ -50,6 +51,19 @@ struct ServerConfig {
 struct LoggingConfig {
     level: String,
     format: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct RouteConfig {
+    path: String,
+    method: String,
+    upstream: String,
+    timeout: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct RoutesConfig {
+    routes: Vec<RouteConfig>,
 }
 
 #[get("/")]
@@ -111,18 +125,28 @@ fn health() -> Json<HealthResponse> {
 }
 
 #[post("/proxy/<path..>")]
-async fn proxy(path: PathBuf) -> Result<String, rocket::http::Status> {
+async fn proxy(path: PathBuf, config: &State<AppConfig>) -> Result<String, rocket::http::Status> {
     let request_path = format!("/{}", path.display());
-    debug!("Processing proxy request: {}", request_path);
-    let target_url = format!("http://httpbin.org/{}", path.display());
-    let client = reqwest::Client::new();
+    let method = "GET"; // 暂时只支持GET，后面扩展
 
-    match client.get(&target_url).send().await {
-        Ok(response) => match response.text().await {
-            Ok(text) => Ok(text),
-            Err(_) => Err(rocket::http::Status::InternalServerError),
-        },
-        Err(_) => Err(rocket::http::Status::BadGateway),
+    // 查找匹配的路由
+    if let Some(route) = find_route(&config.routes.routes, &request_path, method) {
+        let client = reqwest::Client::new();
+
+        match client
+            .get(&route.upstream)
+            .timeout(Duration::from_secs(route.timeout))
+            .send()
+            .await
+        {
+            Ok(response) => match response.text().await {
+                Ok(text) => Ok(text),
+                Err(_) => Err(rocket::http::Status::InternalServerError),
+            },
+            Err(_) => Err(rocket::http::Status::BadGateway),
+        }
+    } else {
+        Err(rocket::http::Status::NotFound)
     }
 }
 
@@ -150,6 +174,28 @@ fn init_logging(config: &LoggingConfig) {
         .filter_level(level)
         .format_timestamp_secs()
         .init();
+}
+
+// 查找路由
+fn find_route<'a>(routes: &'a [RouteConfig], path: &str, method: &str) -> Option<&'a RouteConfig> {
+    routes.iter().find(|route| {
+        // 路径匹配（支持通配符）
+        if route.path.ends_with("/*") {
+            let prefix = route.path.trim_end_matches("/*");
+            if !path.starts_with(prefix) {
+                return false;
+            }
+        } else if route.path != path {
+            return false;
+        }
+
+        // 方法匹配
+        if route.method == "*" {
+            return true;
+        }
+
+        route.method.split('|').any(|m| m.trim() == method)
+    })
 }
 
 #[launch]
