@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use sysinfo::{Cpu, System};
 // 添加一个静态变量记录启动时间
 // 改为使用 OnceLock
+use serde::Deserialize;
 use std::sync::OnceLock;
 use std::time::Instant;
 
@@ -29,6 +30,25 @@ struct MemoryInfo {
 #[derive(serde::Serialize)]
 struct CpuInfo {
     usage_percentage: f64,
+}
+
+#[derive(Debug, Deserialize)]
+struct AppConfig {
+    server: ServerConfig,
+    logging: LoggingConfig,
+}
+
+#[derive(Debug, Deserialize)]
+struct ServerConfig {
+    host: String,
+    port: u16,
+    workers: usize,
+}
+
+#[derive(Debug, Deserialize)]
+struct LoggingConfig {
+    level: String,
+    format: String,
 }
 
 #[get("/")]
@@ -104,10 +124,27 @@ async fn proxy(path: PathBuf) -> Result<String, rocket::http::Status> {
     }
 }
 
+fn load_config() -> Result<AppConfig, config::ConfigError> {
+    let settings = config::Config::builder()
+        .add_source(config::File::with_name("config/default.toml"))
+        .build()?;
+
+    settings.try_deserialize::<AppConfig>()
+}
+
 #[launch]
 fn rocket() -> _ {
     // 初始化启动时间
     START_TIME.set(Instant::now()).unwrap();
 
-    rocket::build().mount("/", routes![index, health, proxy])
+    let config = load_config().expect("Failed to load config");
+
+    rocket::build()
+        .configure(rocket::Config {
+            address: config.server.host.parse().unwrap(),
+            port: config.server.port,
+            workers: config.server.workers,
+            ..Default::default()
+        })
+        .mount("/", routes![index, health, proxy])
 }
