@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use sysinfo::{Cpu, System};
 // 添加一个静态变量记录启动时间
 // 改为使用 OnceLock
+use log::{debug, LevelFilter};
 use serde::Deserialize;
 use std::sync::OnceLock;
 use std::time::Instant;
@@ -111,8 +112,9 @@ fn health() -> Json<HealthResponse> {
 
 #[post("/proxy/<path..>")]
 async fn proxy(path: PathBuf) -> Result<String, rocket::http::Status> {
+    let request_path = format!("/{}", path.display());
+    debug!("Processing proxy request: {}", request_path);
     let target_url = format!("http://httpbin.org/{}", path.display());
-    println!("target_url: {}", target_url);
     let client = reqwest::Client::new();
 
     match client.get(&target_url).send().await {
@@ -124,6 +126,7 @@ async fn proxy(path: PathBuf) -> Result<String, rocket::http::Status> {
     }
 }
 
+// 加载配置
 fn load_config() -> Result<AppConfig, config::ConfigError> {
     let settings = config::Config::builder()
         .add_source(config::File::with_name("config/default.toml"))
@@ -132,12 +135,36 @@ fn load_config() -> Result<AppConfig, config::ConfigError> {
     settings.try_deserialize::<AppConfig>()
 }
 
+// 初始化日志
+fn init_logging(config: &LoggingConfig) {
+    let level = match config.level.as_str() {
+        "error" => LevelFilter::Error,
+        "warn" => LevelFilter::Warn,
+        "info" => LevelFilter::Info,
+        "debug" => LevelFilter::Debug,
+        "trace" => LevelFilter::Trace,
+        _ => LevelFilter::Info,
+    };
+
+    env_logger::Builder::new()
+        .filter_level(level)
+        .format_timestamp_secs()
+        .init();
+}
+
 #[launch]
 fn rocket() -> _ {
     // 初始化启动时间
     START_TIME.set(Instant::now()).unwrap();
-
+    // 加载配置
     let config = load_config().expect("Failed to load config");
+    // 初始化日志系统
+    init_logging(&config.logging);
+    log::info!(
+        "API Gateway starting on {}:{}",
+        config.server.host,
+        config.server.port
+    );
 
     rocket::build()
         .configure(rocket::Config {
