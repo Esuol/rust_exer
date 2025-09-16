@@ -7,8 +7,3 @@ max_connections = 10000
 [logging]
 level = "info"
 format = "json"
-
-[routes]
-routes = [
-  { path = "/api/test", method = "GET", upstream = "http://httpbin.org/json", timeout = 30 },
-]
