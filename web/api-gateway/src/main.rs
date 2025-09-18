@@ -48,6 +48,7 @@ struct AppConfig {
     routes: Vec<RouteConfig>, // 直接使用Vec<RouteConfig>，提供默认值
 }
 
+// 服务器配置结构体
 #[derive(Debug, Deserialize)]
 struct ServerConfig {
     host: String,
