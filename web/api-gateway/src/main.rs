@@ -15,7 +15,8 @@ use std::time::{Duration, Instant};
 static START_TIME: OnceLock<Instant> = OnceLock::new();
 
 // 健康检查响应结构体
-#[derive(serde::Serialize)] //  自动生成JSON序列化代码
+// 自动生成JSON序列化代码
+#[derive(serde::Serialize)]
 struct HealthResponse {
     status: String,
     timestamp: String,
