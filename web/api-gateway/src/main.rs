@@ -25,6 +25,7 @@ struct HealthResponse {
     cpu: CpuInfo,
 }
 
+// 内存信息结构体
 #[derive(serde::Serialize)]
 struct MemoryInfo {
     used_mb: f64,
@@ -32,11 +33,13 @@ struct MemoryInfo {
     usage_percentage: f64,
 }
 
+// CPU信息结构体
 #[derive(serde::Serialize)]
 struct CpuInfo {
     usage_percentage: f64,
 }
 
+// 应用配置结构体
 #[derive(Debug, Deserialize)]
 struct AppConfig {
     server: ServerConfig,
