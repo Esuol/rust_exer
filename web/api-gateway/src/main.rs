@@ -202,6 +202,7 @@ fn init_logging(config: &LoggingConfig) {
 }
 
 // 查找路由
+// 查找路由
 fn find_route<'a>(routes: &'a [RouteConfig], path: &str, method: &str) -> Option<&'a RouteConfig> {
     routes.iter().find(|route| {
         // 路径匹配（支持通配符）
