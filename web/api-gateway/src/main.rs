@@ -284,6 +284,7 @@ fn select_least_conn(route: &RouteConfig) -> Option<&UpstreamServer> {
     select_round_robin(route)
 }
 
+// 实现入口函数
 #[launch]
 fn rocket() -> _ {
     // 初始化启动时间
