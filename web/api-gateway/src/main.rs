@@ -298,6 +298,9 @@ fn rocket() -> _ {
         config.server.host,
         config.server.port
     );
+    log::info!("Available routes: {}", config.routes.len());
+
+    // 构建Rocket应用
 
     rocket::build()
         .configure(rocket::Config {
