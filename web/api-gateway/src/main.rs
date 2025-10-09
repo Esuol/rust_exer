@@ -300,6 +300,7 @@ fn rocket() -> _ {
     );
     log::info!("Available routes: {}", config.routes.len());
     log::info!("Starting API Gateway on {}:{}", config.server.host, config.server.port);
+    let addr = config.server.host.parse().unwrap();
 
     // 构建Rocket应用
 
