@@ -119,6 +119,14 @@ macro_rules! log_error {
     };
 }
 
+/// 记录警告日志的辅助宏
+#[macro_export]
+macro_rules! log_warn {
+    ($context:expr, $warning:expr) => {
+        log::warn!("[{}] 警告: {}", $context, $warning);
+    };
+}
+
 /// 记录上游服务调用的辅助宏
 #[macro_export]
 macro_rules! log_upstream {
