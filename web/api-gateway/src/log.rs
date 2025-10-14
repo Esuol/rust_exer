@@ -171,3 +171,13 @@ mod tests {
         log_request!("GET", "/test", 200, 100.0);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_log_error() {
+        log_error!("test", "error");
+    }
+}
