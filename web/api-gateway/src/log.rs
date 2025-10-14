@@ -161,3 +161,13 @@ mod tests {
         assert_eq!(parse_log_level("INFO"), LevelFilter::Info);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_log_request() {
+        log_request!("GET", "/test", 200, 100.0);
+    }
+}
