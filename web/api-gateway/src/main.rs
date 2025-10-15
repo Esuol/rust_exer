@@ -4,13 +4,16 @@ use std::path::PathBuf;
 use sysinfo::System;
 // 添加一个静态变量记录启动时间
 // 改为使用 OnceLock
-use log::LevelFilter;
 use serde::Deserialize;
 // AtomicUsize: 线程安全的计数器，用于轮询算法
 // Ordering: 内存顺序保证
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
+
+// 导入自定义模块
+mod debug;
+mod logger;
 
 static START_TIME: OnceLock<Instant> = OnceLock::new();
 
@@ -44,6 +47,8 @@ struct CpuInfo {
 struct AppConfig {
     server: ServerConfig,
     logging: LoggingConfig,
+    #[serde(default)]
+    debug: debug::DebugConfig, // 添加调试配置
     #[serde(default)]
     routes: Vec<RouteConfig>, // 直接使用Vec<RouteConfig>，提供默认值
 }
@@ -83,6 +88,11 @@ struct UpstreamServer {
 #[get("/")]
 fn index() -> &'static str {
     "Welcome to API Gateway!"
+}
+
+#[get("/debug")]
+fn debug_info(debug_manager: &State<debug::DebugManager>) -> Json<debug::DebugInfo> {
+    Json(debug_manager.get_debug_info())
 }
 
 #[get("/health")]
@@ -139,11 +149,16 @@ fn health() -> Json<HealthResponse> {
 }
 
 #[post("/proxy/<path..>")]
-async fn proxy(path: PathBuf, config: &State<AppConfig>) -> Result<String, rocket::http::Status> {
+async fn proxy(
+    path: PathBuf,
+    config: &State<AppConfig>,
+    debug_manager: &State<debug::DebugManager>,
+) -> Result<String, rocket::http::Status> {
     let request_path = format!("/{}", path.display());
     let method = "GET"; // 暂时只支持GET，后面扩展
+    let start_time = Instant::now();
 
-    // 查找匹配的路由
+    // 使用标准日志宏
     log::debug!(
         "Looking for route: {} with method: {}",
         request_path,
@@ -154,18 +169,50 @@ async fn proxy(path: PathBuf, config: &State<AppConfig>) -> Result<String, rocke
     if let Some(route) = find_route(&config.routes, &request_path, method) {
         log::debug!("Found matching route: {}", route.path);
         if let Some(upstream) = select_upstream(route) {
+            // 使用调试追踪宏
+            trace_upstream!(&upstream.url, method, &request_path);
+
             let client = reqwest::Client::new();
-            match client
+            let response_result = client
                 .get(&upstream.url) // 使用负载均衡选择的上游
                 .timeout(Duration::from_secs(route.timeout))
                 .send()
-                .await
-            {
-                Ok(response) => match response.text().await {
-                    Ok(text) => Ok(text),
-                    Err(_) => Err(rocket::http::Status::InternalServerError),
-                },
-                Err(_) => Err(rocket::http::Status::BadGateway),
+                .await;
+
+            let response_time = start_time.elapsed();
+            let response_time_ms = response_time.as_secs_f64() * 1000.0;
+
+            match response_result {
+                Ok(response) => {
+                    match response.text().await {
+                        Ok(text) => {
+                            // 记录成功的请求统计
+                            debug_manager.record_request(
+                                true,
+                                response_time_ms,
+                                Some(&upstream.url),
+                            );
+                            log_request!(method, &request_path, "200", response_time_ms);
+                            Ok(text)
+                        }
+                        Err(_) => {
+                            // 记录失败的请求统计
+                            debug_manager.record_request(
+                                false,
+                                response_time_ms,
+                                Some(&upstream.url),
+                            );
+                            log_error!("响应解析", "无法解析响应文本");
+                            Err(rocket::http::Status::InternalServerError)
+                        }
+                    }
+                }
+                Err(_) => {
+                    // 记录失败的请求统计
+                    debug_manager.record_request(false, response_time_ms, Some(&upstream.url));
+                    log_error!("上游调用", "网络请求失败");
+                    Err(rocket::http::Status::BadGateway)
+                }
             }
         } else {
             Err(rocket::http::Status::ServiceUnavailable)
@@ -186,19 +233,12 @@ fn load_config() -> Result<AppConfig, config::ConfigError> {
 
 // 初始化日志
 fn init_logging(config: &LoggingConfig) {
-    let level = match config.level.as_str() {
-        "error" => LevelFilter::Error,
-        "warn" => LevelFilter::Warn,
-        "info" => LevelFilter::Info,
-        "debug" => LevelFilter::Debug,
-        "trace" => LevelFilter::Trace,
-        _ => LevelFilter::Info,
+    let log_config = logger::LogConfig {
+        level: config.level.clone(),
+        format: config.format.clone(),
     };
 
-    env_logger::Builder::new()
-        .filter_level(level)
-        .format_timestamp_secs()
-        .init();
+    logger::init_logger(&log_config);
 }
 
 // 查找路由
@@ -293,6 +333,10 @@ fn rocket() -> _ {
     let config = load_config().expect("Failed to load config");
     // 初始化日志系统
     init_logging(&config.logging);
+
+    // 初始化调试管理器
+    let debug_manager = debug::DebugManager::new(config.debug.clone());
+
     log::info!(
         "API Gateway starting on {}:{}",
         config.server.host,
@@ -306,7 +350,6 @@ fn rocket() -> _ {
     );
 
     // 构建Rocket应用
-
     rocket::build()
         .configure(rocket::Config {
             address: config.server.host.parse().unwrap(),
@@ -315,5 +358,6 @@ fn rocket() -> _ {
             ..Default::default()
         })
         .manage(config) // 添加状态管理
-        .mount("/", routes![index, health, proxy])
+        .manage(debug_manager) // 添加调试管理器状态
+        .mount("/", routes![index, health, debug_info, proxy])
 }

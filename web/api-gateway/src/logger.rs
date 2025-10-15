@@ -28,7 +28,7 @@ pub struct LogConfig {
 pub fn init_logger(config: &LogConfig) {
     let level = parse_log_level(&config.level);
 
-    let builder = env_logger::Builder::new();
+    let mut builder = env_logger::Builder::new();
 
     match config.format.as_str() {
         "json" => {

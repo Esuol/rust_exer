@@ -7,3 +7,9 @@ max_connections = 10000
 [logging]
 level = "info"
 format = "json"
+
+[debug]
+enabled = true
+performance_monitoring = true
+request_tracing = true
+debug_port = 8080
