@@ -346,21 +346,3 @@ mod tests {
         assert_eq!(debug_info.request_stats.total_requests, 0);
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_debug_manager_creation() {
-        let config = DebugConfig {
-            enabled: true,
-            performance_monitoring: true,
-            request_tracing: true,
-            debug_port: Some(8080),
-        };
-        let manager = DebugManager::new(config);
-        assert!(manager.is_enabled());
-        assert!(manager.is_performance_monitoring_enabled());
-    }
-}
