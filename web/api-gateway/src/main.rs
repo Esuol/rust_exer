@@ -14,6 +14,7 @@ use std::time::{Duration, Instant};
 // 导入自定义模块
 mod debug;
 mod logger;
+mod request;
 
 static START_TIME: OnceLock<Instant> = OnceLock::new();
 
