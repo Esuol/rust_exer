@@ -88,8 +88,12 @@ impl RequestHandler {
                 let parts: Vec<&str> = param.split('=').map(|s| s.as_str()).collect();
                 if parts.len() == 2 {
                     query_params.insert(
-                        urlencoding::decode(parts[0]).unwrap_or_default().to_string(),
-                        urlencoding::decode(parts[1]).unwrap_or_default().to_string(),
+                        urlencoding::decode(parts[0])
+                            .unwrap_or_default()
+                            .to_string(),
+                        urlencoding::decode(parts[1])
+                            .unwrap_or_default()
+                            .to_string(),
                     );
                 }
             }
