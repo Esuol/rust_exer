@@ -1,7 +1,7 @@
 /// API Gateway 请求处理模块
 /// 提供请求解析、验证和转换功能
-use rocket::http::{Header, HeaderMap, Status};
-use rocket::request::{FromRequest, Outcome, Request};
+use rocket::http::Status;
+use rocket::request::Request;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -55,7 +55,7 @@ impl RequestHandler {
     pub fn new() -> Self {
         Self {
             max_request_size: 10 * 1024 * 1024, // 10MB
-            request_timeout: 30, // 30秒
+            request_timeout: 30,                // 30秒
             allowed_methods: vec![
                 "GET".to_string(),
                 "POST".to_string(),
@@ -80,15 +80,16 @@ impl RequestHandler {
     pub fn parse_request_info(&self, request: &Request) -> RequestInfo {
         let method = request.method().to_string();
         let path = request.uri().path().to_string();
-        
+
         // 解析查询参数
         let mut query_params = HashMap::new();
         if let Some(query) = request.uri().query() {
             for param in query.split('&') {
-                if let Some((key, value)) = param.split_once('=') {
+                let parts: Vec<&str> = param.split('=').map(|s| s.as_str()).collect();
+                if parts.len() == 2 {
                     query_params.insert(
-                        urlencoding::decode(key).unwrap_or_default().to_string(),
-                        urlencoding::decode(value).unwrap_or_default().to_string(),
+                        urlencoding::decode(parts[0]).unwrap_or_default().to_string(),
+                        urlencoding::decode(parts[1]).unwrap_or_default().to_string(),
                     );
                 }
             }
@@ -97,10 +98,7 @@ impl RequestHandler {
         // 解析请求头
         let mut headers = HashMap::new();
         for header in request.headers().iter() {
-            headers.insert(
-                header.name().to_string(),
-                header.value().to_string(),
-            );
+            headers.insert(header.name().to_string(), header.value().to_string());
         }
 
         // 获取客户端IP
@@ -135,19 +133,17 @@ impl RequestHandler {
 
         // 验证请求方法
         if !self.allowed_methods.contains(&request_info.method) {
-            errors.push(format!(
-                "不允许的请求方法: {}",
-                request_info.method
-            ));
+            errors.push(format!("不允许的请求方法: {}", request_info.method));
         }
 
         // 验证请求头
         for (header_name, _) in &request_info.headers {
-            if !self.allowed_headers.iter().any(|h| h.eq_ignore_ascii_case(header_name)) {
-                warnings.push(format!(
-                    "未识别的请求头: {}",
-                    header_name
-                ));
+            if !self
+                .allowed_headers
+                .iter()
+                .any(|h| h.eq_ignore_ascii_case(header_name))
+            {
+                warnings.push(format!("未识别的请求头: {}", header_name));
             }
         }
 
@@ -172,7 +168,7 @@ impl RequestHandler {
     fn generate_request_id(&self) -> String {
         use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(0);
-        
+
         let id = COUNTER.fetch_add(1, Ordering::SeqCst);
         format!("req_{:016x}", id)
     }
@@ -185,23 +181,23 @@ impl RequestHandler {
     /// 获取请求大小估算
     pub fn estimate_request_size(&self, request_info: &RequestInfo) -> usize {
         let mut size = 0;
-        
+
         // 方法大小
         size += request_info.method.len();
-        
+
         // 路径大小
         size += request_info.path.len();
-        
+
         // 查询参数大小
         for (key, value) in &request_info.query_params {
             size += key.len() + value.len() + 2; // +2 for '=' and '&'
         }
-        
+
         // 头部大小
         for (key, value) in &request_info.headers {
             size += key.len() + value.len() + 4; // +4 for ': ' and '\r\n'
         }
-        
+
         size
     }
 
@@ -217,7 +213,8 @@ impl RequestHandler {
             "status": status.code,
             "message": message,
             "timestamp": chrono::Utc::now().to_rfc3339()
-        }).to_string()
+        })
+        .to_string()
     }
 
     /// 创建成功响应
@@ -226,7 +223,8 @@ impl RequestHandler {
             "success": true,
             "data": data,
             "timestamp": chrono::Utc::now().to_rfc3339()
-        }).to_string()
+        })
+        .to_string()
     }
 }
 
@@ -239,7 +237,7 @@ impl Default for RequestHandler {
 /// 请求追踪宏
 /// 用于记录请求的详细信息
 #[macro_export]
-macro_rules! trace_request {
+macro_rules! trace_request_info {
     ($request_info:expr) => {
         log::debug!(
             "[请求追踪] {} {} - ID: {} - IP: {:?}",
@@ -255,27 +253,25 @@ macro_rules! trace_request {
 /// 用于快速验证请求
 #[macro_export]
 macro_rules! validate_request {
-    ($handler:expr, $request_info:expr) => {
-        {
-            let validation = $handler.validate_request($request_info);
-            if !validation.is_valid {
-                log::warn!(
-                    "[请求验证失败] {} - 错误: {:?}",
-                    $request_info.request_id,
-                    validation.errors
-                );
-                return Err(rocket::http::Status::BadRequest);
-            }
-            if !validation.warnings.is_empty() {
-                log::warn!(
-                    "[请求验证警告] {} - 警告: {:?}",
-                    $request_info.request_id,
-                    validation.warnings
-                );
-            }
-            validation
+    ($handler:expr, $request_info:expr) => {{
+        let validation = $handler.validate_request($request_info);
+        if !validation.is_valid {
+            log::warn!(
+                "[请求验证失败] {} - 错误: {:?}",
+                $request_info.request_id,
+                validation.errors
+            );
+            return Err(rocket::http::Status::BadRequest);
         }
-    };
+        if !validation.warnings.is_empty() {
+            log::warn!(
+                "[请求验证警告] {} - 警告: {:?}",
+                $request_info.request_id,
+                validation.warnings
+            );
+        }
+        validation
+    }};
 }
 
 /// 请求大小检查宏
@@ -313,7 +309,7 @@ mod tests {
         let handler = RequestHandler::new();
         let id1 = handler.generate_request_id();
         let id2 = handler.generate_request_id();
-        
+
         assert_ne!(id1, id2);
         assert!(id1.starts_with("req_"));
         assert!(id2.starts_with("req_"));
@@ -332,7 +328,7 @@ mod tests {
             timestamp: chrono::Utc::now().to_rfc3339(),
             request_id: "test".to_string(),
         };
-        
+
         let size = handler.estimate_request_size(&request_info);
         assert!(size > 0);
     }
@@ -350,10 +346,10 @@ mod tests {
             timestamp: chrono::Utc::now().to_rfc3339(),
             request_id: "test".to_string(),
         };
-        
+
         let validation = handler.validate_request(&request_info);
         assert!(validation.is_valid);
-        
+
         // 测试无效方法
         request_info.method = "INVALID".to_string();
         let validation = handler.validate_request(&request_info);
