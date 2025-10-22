@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 mod debug;
 mod logger;
 mod request;
+mod http;
 
 static START_TIME: OnceLock<Instant> = OnceLock::new();
 
