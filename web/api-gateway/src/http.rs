@@ -138,9 +138,12 @@ impl HttpClientManager {
     }
 
     /// 发送 HTTP 请求
-    pub async fn send_request(&self, request: HttpRequest) -> Result<HttpResponse, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn send_request(
+        &self,
+        request: HttpRequest,
+    ) -> Result<HttpResponse, Box<dyn std::error::Error + Send + Sync>> {
         let start_time = Instant::now();
-        
+
         // 构建请求
         let mut req_builder = match request.method.to_uppercase().as_str() {
             "GET" => self.client.get(&request.url),
@@ -198,7 +201,10 @@ impl HttpClientManager {
     }
 
     /// 发送 GET 请求
-    pub async fn get(&self, url: &str) -> Result<HttpResponse, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn get(
+        &self,
+        url: &str,
+    ) -> Result<HttpResponse, Box<dyn std::error::Error + Send + Sync>> {
         self.send_request(HttpRequest {
             method: "GET".to_string(),
             url: url.to_string(),
@@ -206,11 +212,16 @@ impl HttpClientManager {
             body: None,
             query_params: HashMap::new(),
             timeout: None,
-        }).await
+        })
+        .await
     }
 
     /// 发送 POST 请求
-    pub async fn post(&self, url: &str, body: Option<String>) -> Result<HttpResponse, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn post(
+        &self,
+        url: &str,
+        body: Option<String>,
+    ) -> Result<HttpResponse, Box<dyn std::error::Error + Send + Sync>> {
         self.send_request(HttpRequest {
             method: "POST".to_string(),
             url: url.to_string(),
@@ -218,7 +229,8 @@ impl HttpClientManager {
             body,
             query_params: HashMap::new(),
             timeout: None,
-        }).await
+        })
+        .await
     }
 
     /// 发送带自定义头部的请求
@@ -236,7 +248,8 @@ impl HttpClientManager {
             body,
             query_params: HashMap::new(),
             timeout: None,
-        }).await
+        })
+        .await
     }
 
     /// 提取响应头
@@ -254,7 +267,7 @@ impl HttpClientManager {
     async fn update_stats(&self, is_success: bool, response_time_ms: f64) {
         let mut stats = self.stats.write().await;
         stats.total_requests += 1;
-        
+
         if is_success {
             stats.successful_requests += 1;
         } else {
@@ -268,9 +281,10 @@ impl HttpClientManager {
             stats.min_response_time_ms = stats.min_response_time_ms.min(response_time_ms);
         }
         stats.max_response_time_ms = stats.max_response_time_ms.max(response_time_ms);
-        
+
         // 计算平均响应时间
-        let total_time = stats.avg_response_time_ms * (stats.total_requests - 1) as f64 + response_time_ms;
+        let total_time =
+            stats.avg_response_time_ms * (stats.total_requests - 1) as f64 + response_time_ms;
         stats.avg_response_time_ms = total_time / stats.total_requests as f64;
     }
 
@@ -299,7 +313,12 @@ impl HttpClientManager {
     }
 
     /// 构建完整的 URL
-    pub fn build_url(&self, base_url: &str, path: &str, query_params: &HashMap<String, String>) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn build_url(
+        &self,
+        base_url: &str,
+        path: &str,
+        query_params: &HashMap<String, String>,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         let mut url = if base_url.ends_with('/') && path.starts_with('/') {
             format!("{}{}", base_url.trim_end_matches('/'), path)
         } else if !base_url.ends_with('/') && !path.starts_with('/') {
@@ -326,7 +345,10 @@ impl HttpClientManager {
     }
 
     /// 更新配置
-    pub fn update_config(&mut self, config: HttpConfig) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub fn update_config(
+        &mut self,
+        config: HttpConfig,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         self.config = config;
         // 注意：这里需要重新创建客户端，但为了简化，我们保持现有客户端
         Ok(())
@@ -355,13 +377,17 @@ impl HttpRequestBuilder {
 
     /// 添加请求头
     pub fn header(mut self, key: &str, value: &str) -> Self {
-        self.request.headers.insert(key.to_string(), value.to_string());
+        self.request
+            .headers
+            .insert(key.to_string(), value.to_string());
         self
     }
 
     /// 添加查询参数
     pub fn query_param(mut self, key: &str, value: &str) -> Self {
-        self.request.query_params.insert(key.to_string(), value.to_string());
+        self.request
+            .query_params
+            .insert(key.to_string(), value.to_string());
         self
     }
 
@@ -414,7 +440,10 @@ impl HttpResponseProcessor {
     }
 
     /// 格式化响应为 JSON
-    pub fn format_response_json(&self, response: &HttpResponse) -> Result<String, serde_json::Error> {
+    pub fn format_response_json(
+        &self,
+        response: &HttpResponse,
+    ) -> Result<String, serde_json::Error> {
         serde_json::to_string_pretty(&serde_json::json!({
             "status_code": response.status_code,
             "status_description": self.get_status_description(response.status_code),
@@ -432,7 +461,11 @@ impl HttpResponseProcessor {
     }
 
     /// 获取响应头值
-    pub fn get_header<'a>(&self, response: &'a HttpResponse, header_name: &str) -> Option<&'a String> {
+    pub fn get_header<'a>(
+        &self,
+        response: &'a HttpResponse,
+        header_name: &str,
+    ) -> Option<&'a String> {
         response.headers.get(header_name)
     }
 }
@@ -456,7 +489,8 @@ impl ConnectionPoolMonitor {
     /// 检查连接池健康状态
     pub async fn is_healthy(&self) -> bool {
         let stats = self.stats.read().await;
-        stats.total_requests > 0 && stats.successful_requests as f64 / stats.total_requests as f64 > 0.8
+        stats.total_requests > 0
+            && stats.successful_requests as f64 / stats.total_requests as f64 > 0.8
     }
 
     /// 获取成功率
@@ -500,11 +534,7 @@ macro_rules! trace_http_response {
 #[macro_export]
 macro_rules! handle_http_error {
     ($error:expr, $context:expr) => {
-        log::error!(
-            "[HTTP错误] {} - 错误: {}",
-            $context,
-            $error
-        );
+        log::error!("[HTTP错误] {} - 错误: {}", $context, $error);
     };
 }
 
@@ -532,7 +562,10 @@ mod tests {
 
         assert_eq!(request.method, "GET");
         assert_eq!(request.url, "https://example.com");
-        assert_eq!(request.headers.get("Content-Type"), Some(&"application/json".to_string()));
+        assert_eq!(
+            request.headers.get("Content-Type"),
+            Some(&"application/json".to_string())
+        );
         assert_eq!(request.query_params.get("page"), Some(&"1".to_string()));
         assert_eq!(request.timeout, Some(30));
     }
@@ -541,7 +574,7 @@ mod tests {
     fn test_url_validation() {
         let config = HttpConfig::default();
         let manager = HttpClientManager::new(config).unwrap();
-        
+
         assert!(manager.is_valid_url("https://example.com"));
         assert!(manager.is_valid_url("http://localhost:8080"));
         assert!(!manager.is_valid_url("invalid-url"));
@@ -551,12 +584,14 @@ mod tests {
     fn test_url_building() {
         let config = HttpConfig::default();
         let manager = HttpClientManager::new(config).unwrap();
-        
+
         let mut query_params = HashMap::new();
         query_params.insert("page".to_string(), "1".to_string());
         query_params.insert("size".to_string(), "10".to_string());
-        
-        let url = manager.build_url("https://api.example.com", "/users", &query_params).unwrap();
+
+        let url = manager
+            .build_url("https://api.example.com", "/users", &query_params)
+            .unwrap();
         assert!(url.contains("https://api.example.com/users"));
         assert!(url.contains("page=1"));
         assert!(url.contains("size=10"));
@@ -565,9 +600,12 @@ mod tests {
     #[test]
     fn test_response_processor() {
         let processor = HttpResponseProcessor;
-        
+
         assert_eq!(processor.get_status_description(200), "OK");
         assert_eq!(processor.get_status_description(404), "Not Found");
-        assert_eq!(processor.get_status_description(500), "Internal Server Error");
+        assert_eq!(
+            processor.get_status_description(500),
+            "Internal Server Error"
+        );
     }
 }
