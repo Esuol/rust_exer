@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 mod debug;
 mod http;
 mod logger;
+mod proxy;
 mod request;
 mod response;
 

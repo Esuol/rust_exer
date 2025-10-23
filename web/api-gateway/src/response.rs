@@ -1,7 +1,7 @@
 /// API Gateway 响应处理模块
 /// 提供响应格式化、缓存、压缩、错误处理等功能
 use rocket::http::{ContentType, Header, Status};
-use rocket::response::{Responder, Response as RocketResponse};
+use rocket::response::Response as RocketResponse;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Cursor;
@@ -574,12 +574,14 @@ impl ResponseCacheManager {
 
     /// 驱逐最旧的缓存项
     fn evict_oldest(&mut self) {
-        if let Some((oldest_key, _)) = self
+        let oldest_key = self
             .cache
             .iter()
             .min_by_key(|(_, cached)| cached.created_at)
-        {
-            self.cache.remove(oldest_key);
+            .map(|(key, _)| key.clone());
+
+        if let Some(key) = oldest_key {
+            self.cache.remove(&key);
         }
     }
 }
