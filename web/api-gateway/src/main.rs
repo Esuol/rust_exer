@@ -153,7 +153,7 @@ fn health() -> Json<HealthResponse> {
 }
 
 #[post("/proxy/<path..>")]
-async fn proxy(
+async fn proxy_request(
     path: PathBuf,
     config: &State<AppConfig>,
     debug_manager: &State<debug::DebugManager>,
@@ -363,5 +363,5 @@ fn rocket() -> _ {
         })
         .manage(config) // 添加状态管理
         .manage(debug_manager) // 添加调试管理器状态
-        .mount("/", routes![index, health, debug_info, proxy])
+        .mount("/", routes![index, health, debug_info, proxy_request])
 }

@@ -3,7 +3,6 @@
 use crate::http::{HttpClientManager, HttpConfig, HttpResponse};
 use crate::request::RequestInfo;
 use crate::response::{ApiResponse, ResponseConfig, ResponseHandler};
-use rocket::http::Status;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -201,7 +200,7 @@ impl CircuitBreaker {
         let mut success_count = self.success_count.write().await;
         *success_count += 1;
 
-        let state = *self.state.read().await;
+        let state = self.state.read().await.clone();
         if state == CircuitBreakerState::HalfOpen {
             // 半开状态下成功，重置为关闭状态
             self.transition_to_closed().await;
@@ -254,7 +253,7 @@ impl CircuitBreaker {
 
     /// 获取当前状态
     pub async fn get_state(&self) -> CircuitBreakerState {
-        *self.state.read().await
+        self.state.read().await.clone()
     }
 }
 
@@ -314,7 +313,7 @@ impl LoadBalancer {
         let mut index = self.current_index.lock().unwrap();
         let selected = servers.get(*index % servers.len())?.clone();
         *index = (*index + 1) % servers.len();
-        Some(selected)
+        Some(selected.clone())
     }
 
     /// 加权选择
@@ -332,12 +331,12 @@ impl LoadBalancer {
 
         for server in servers {
             if random_weight < server.weight {
-                return Some(server.clone());
+                return Some(server.clone().clone());
             }
             random_weight -= server.weight;
         }
 
-        servers.first().map(|s| s.clone())
+        servers.first().map(|s| s.clone()).cloned()
     }
 
     /// 最少连接选择
@@ -349,6 +348,7 @@ impl LoadBalancer {
             .iter()
             .min_by_key(|s| s.connections)
             .map(|s| s.clone())
+            .cloned()
     }
 
     /// 随机选择
@@ -363,7 +363,7 @@ impl LoadBalancer {
             .as_nanos()
             % servers.len() as u128) as usize;
 
-        servers.get(index).map(|s| s.clone())
+        servers.get(index).map(|s| s.clone()).cloned()
     }
 
     /// 更新服务器状态
@@ -440,7 +440,7 @@ impl ProxyHandler {
                 503,
                 "服务暂时不可用（熔断器打开）".to_string(),
                 Some("CircuitBreakerOpen".to_string()),
-                request_info.request_id.clone(),
+                Some(request_info.request_id.clone()),
             ));
         }
 
@@ -462,7 +462,7 @@ impl ProxyHandler {
                             "response_time_ms": response.response_time_ms
                         }),
                         Some("请求成功".to_string()),
-                        request_info.request_id.clone(),
+                        Some(request_info.request_id.clone()),
                     ));
                 }
                 Err(error) => {
@@ -487,10 +487,10 @@ impl ProxyHandler {
             502,
             format!(
                 "上游服务错误: {}",
-                last_error.unwrap_or_else(|| "未知错误".to_string())
+                last_error.unwrap_or_else(|| "未知错误".to_string().into())
             ),
             Some("UpstreamError".to_string()),
-            request_info.request_id.clone(),
+            Some(request_info.request_id.clone()),
         ))
     }
 
