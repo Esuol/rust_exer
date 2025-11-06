@@ -14,6 +14,7 @@ use std::time::{Duration, Instant};
 // 导入自定义模块
 mod code;
 mod debug;
+mod error;
 mod http;
 mod logger;
 mod proxy;
@@ -158,7 +159,7 @@ async fn proxy_request(
     path: PathBuf,
     config: &State<AppConfig>,
     debug_manager: &State<debug::DebugManager>,
-) -> Result<String, rocket::http::Status> {
+) -> Result<String, error::ApiGatewayError> {
     let request_path = format!("/{}", path.display());
     let method = "GET"; // 暂时只支持GET，后面扩展
     let start_time = Instant::now();
@@ -208,7 +209,7 @@ async fn proxy_request(
                                 Some(&upstream.url),
                             );
                             log_error!("响应解析", "无法解析响应文本");
-                            Err(rocket::http::Status::InternalServerError)
+                            Err(error::ApiGatewayError::internal_error("无法解析响应文本"))
                         }
                     }
                 }
@@ -216,14 +217,34 @@ async fn proxy_request(
                     // 记录失败的请求统计
                     debug_manager.record_request(false, response_time_ms, Some(&upstream.url));
                     log_error!("上游调用", "网络请求失败");
-                    Err(rocket::http::Status::BadGateway)
+                    Err(error::ApiGatewayError::bad_gateway("网络请求失败"))
                 }
             }
         } else {
-            Err(rocket::http::Status::ServiceUnavailable)
+            Err(error::ApiGatewayError::upstream_unavailable(
+                "No upstream available",
+            ))
         }
     } else {
-        Err(rocket::http::Status::NotFound)
+        Err(error::ApiGatewayError::route_not_found(&request_path))
+    }
+}
+
+#[get("/test-error/<error_type>")]
+fn test_error(error_type: &str) -> Result<String, error::ApiGatewayError> {
+    match error_type {
+        "not-found" => Err(error::ApiGatewayError::route_not_found("/test/path")),
+        "upstream-unavailable" => Err(error::ApiGatewayError::upstream_unavailable(
+            "http://example.com",
+        )),
+        "timeout" => Err(error::ApiGatewayError::request_timeout(
+            "http://example.com",
+        )),
+        "internal" => Err(error::ApiGatewayError::internal_error(
+            "Test internal error",
+        )),
+        "bad-gateway" => Err(error::ApiGatewayError::bad_gateway("Test bad gateway")),
+        _ => Ok("Unknown error type".to_string()),
     }
 }
 
@@ -364,5 +385,8 @@ fn rocket() -> _ {
         })
         .manage(config) // 添加状态管理
         .manage(debug_manager) // 添加调试管理器状态
-        .mount("/", routes![index, health, debug_info, proxy_request])
+        .mount(
+            "/",
+            routes![index, health, debug_info, proxy_request, test_error],
+        )
 }

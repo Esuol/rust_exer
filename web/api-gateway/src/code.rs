@@ -78,12 +78,12 @@ impl CodeManager {
             error_codes: HashMap::new(),
             status_codes: HashMap::new(),
         };
-        
+
         // 初始化默认错误码
         manager.init_default_error_codes();
         // 初始化默认状态码
         manager.init_default_status_codes();
-        
+
         manager
     }
 
@@ -154,7 +154,6 @@ impl CodeManager {
                 retryable: true,
                 suggestion: Some("请降低请求频率后重试".to_string()),
             },
-
             // 服务器错误 (5xx)
             ErrorCode {
                 code: "INTERNAL_SERVER_ERROR".to_string(),
@@ -192,7 +191,6 @@ impl CodeManager {
                 retryable: true,
                 suggestion: Some("请稍后重试".to_string()),
             },
-
             // 网关特定错误
             ErrorCode {
                 code: "UPSTREAM_ERROR".to_string(),
@@ -274,7 +272,6 @@ impl CodeManager {
                 is_client_error: false,
                 is_server_error: false,
             },
-
             // 4xx 客户端错误
             StatusCodeInfo {
                 code: 400,
@@ -332,7 +329,6 @@ impl CodeManager {
                 is_client_error: true,
                 is_server_error: false,
             },
-
             // 5xx 服务器错误
             StatusCodeInfo {
                 code: 500,
@@ -390,7 +386,8 @@ impl CodeManager {
 
     /// 添加状态码信息
     pub fn add_status_code_info(&mut self, status_code_info: StatusCodeInfo) {
-        self.status_codes.insert(status_code_info.code, status_code_info);
+        self.status_codes
+            .insert(status_code_info.code, status_code_info);
     }
 
     /// 根据HTTP状态码获取错误码
@@ -600,11 +597,7 @@ impl StatusCodeUtils {
 #[macro_export]
 macro_rules! trace_error_code {
     ($code:expr, $context:expr) => {
-        log::error!(
-            "[错误码] {} - 上下文: {}",
-            $code,
-            $context
-        );
+        log::error!("[错误码] {} - 上下文: {}", $code, $context);
     };
 }
 
@@ -612,11 +605,7 @@ macro_rules! trace_error_code {
 #[macro_export]
 macro_rules! trace_status_code {
     ($code:expr, $context:expr) => {
-        log::debug!(
-            "[状态码] {} - 上下文: {}",
-            $code,
-            $context
-        );
+        log::debug!("[状态码] {} - 上下文: {}", $code, $context);
     };
 }
 
@@ -672,7 +661,10 @@ mod tests {
     fn test_status_code_utils() {
         assert_eq!(StatusCodeUtils::get_description(200), "OK");
         assert_eq!(StatusCodeUtils::get_description(404), "Not Found");
-        assert_eq!(StatusCodeUtils::get_description(500), "Internal Server Error");
+        assert_eq!(
+            StatusCodeUtils::get_description(500),
+            "Internal Server Error"
+        );
 
         assert!(StatusCodeUtils::is_success(200));
         assert!(!StatusCodeUtils::is_success(400));
@@ -706,7 +698,7 @@ mod tests {
         let manager = CodeManager::new();
         let retryable_codes = manager.get_retryable_error_codes();
         assert!(!retryable_codes.is_empty());
-        
+
         for code in retryable_codes {
             assert!(code.retryable);
         }
