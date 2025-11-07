@@ -12,6 +12,7 @@ use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
 // 导入自定义模块
+mod api;
 mod code;
 mod debug;
 mod error;
@@ -387,6 +388,15 @@ fn rocket() -> _ {
         .manage(debug_manager) // 添加调试管理器状态
         .mount(
             "/",
-            routes![index, health, debug_info, proxy_request, test_error],
+            routes![
+                index,
+                health,
+                debug_info,
+                proxy_request,
+                test_error,
+                api::hello,
+                api::greet,
+                api::echo
+            ],
         )
 }
