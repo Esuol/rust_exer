@@ -21,6 +21,7 @@ mod logger;
 mod proxy;
 mod request;
 mod response;
+mod utils;
 
 static START_TIME: OnceLock<Instant> = OnceLock::new();
 
