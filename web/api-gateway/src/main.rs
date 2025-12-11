@@ -13,6 +13,7 @@ use std::time::{Duration, Instant};
 
 // 导入自定义模块
 mod api;
+mod calc;
 mod code;
 mod debug;
 mod error;
