@@ -364,9 +364,8 @@ pub fn format_number(num: i64) -> String {
 /// 格式化后的字符串
 pub fn format_float(num: f64, decimals: usize) -> String {
     let rounded = round_to_decimal(num, decimals);
-    let parts: Vec<&str> = format!("{:.decimals$}", rounded, decimals = decimals)
-        .split('.')
-        .collect();
+    let formatted = format!("{:.decimals$}", rounded, decimals = decimals);
+    let parts: Vec<&str> = formatted.split('.').collect();
 
     if parts.len() == 2 {
         let int_part: i64 = parts[0].parse().unwrap_or(0);

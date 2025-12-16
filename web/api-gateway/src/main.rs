@@ -19,6 +19,7 @@ mod debug;
 mod error;
 mod http;
 mod logger;
+mod pie;
 mod proxy;
 mod request;
 mod response;
@@ -398,7 +399,10 @@ fn rocket() -> _ {
                 test_error,
                 api::hello,
                 api::greet,
-                api::echo
+                api::echo,
+                pie::calculate_pie_get,
+                pie::calculate_pie_post,
+                pie::pie_example
             ],
         )
 }
