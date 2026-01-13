@@ -539,5 +539,20 @@ mod tests {
         assert_eq!(stats.current_count, 2);
     }
 
+    #[test]
+    fn test_clear_warnings() {
+        let config = WarningConfig::default();
+        let manager = WarningManager::new(config);
 
+        manager.record_warning(
+            WarningLevel::Low,
+            "Warning".to_string(),
+            "source".to_string(),
+            None,
+        );
+        manager.clear_all();
+
+        let warnings = manager.get_warnings(None);
+        assert_eq!(warnings.len(), 0);
+    }
 }
