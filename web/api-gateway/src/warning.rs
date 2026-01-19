@@ -585,4 +585,11 @@ mod tests {
             None,
         );
     }
+
+    #[test]
+    fn test_get_config() {
+        let config = WarningConfig::default();
+        let manager = WarningManager::new(config);
+        assert_eq!(manager.get_config(), &config);
+    }
 }
