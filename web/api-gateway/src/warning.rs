@@ -555,4 +555,34 @@ mod tests {
         let warnings = manager.get_warnings(None);
         assert_eq!(warnings.len(), 0);
     }
+
+    #[test]
+    fn test_clear_by_level() {
+        let config = WarningConfig::default();
+        let manager = WarningManager::new(config);
+
+        manager.record_warning(
+            WarningLevel::Low,
+            "Warning".to_string(),
+            "source".to_string(),
+            None,
+        );
+        manager.clear_by_level(WarningLevel::Low);
+
+        let warnings = manager.get_warnings(None);
+        assert_eq!(warnings.len(), 0);
+    }
+
+    #[test]
+    fn test_get_stats() {
+        let config = WarningConfig::default();
+        let manager = WarningManager::new(config);
+
+        manager.record_warning(
+            WarningLevel::Low,
+            "Warning".to_string(),
+            "source".to_string(),
+            None,
+        );
+    }
 }
