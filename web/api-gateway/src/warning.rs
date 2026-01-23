@@ -600,4 +600,11 @@ mod tests {
         let manager = WarningManager::new(config);
         assert_eq!(manager.get_config().enabled, false);
     }
+
+    #[test]
+    fn test_is_enabled() {
+        let config = WarningConfig::default();
+        let manager = WarningManager::new(config);
+        assert_eq!(manager.is_enabled(), true);
+    }
 }
