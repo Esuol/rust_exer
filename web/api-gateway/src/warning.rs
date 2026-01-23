@@ -592,4 +592,12 @@ mod tests {
         let manager = WarningManager::new(config);
         assert_eq!(manager.get_config(), &config);
     }
+
+    #[test]
+    fn test_update_config() {
+        let mut config = WarningConfig::default();
+        config.enabled = false;
+        let manager = WarningManager::new(config);
+        assert_eq!(manager.get_config().enabled, false);
+    }
 }
