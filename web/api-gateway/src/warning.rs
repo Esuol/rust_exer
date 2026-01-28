@@ -607,4 +607,27 @@ mod tests {
         let manager = WarningManager::new(config);
         assert_eq!(manager.is_enabled(), true);
     }
+
+    #[test]
+    fn test_warning_stats() {
+        let config = WarningConfig::default();
+        let manager = WarningManager::new(config);
+
+        manager.record_warning(
+            WarningLevel::Low,
+            "Warning 1".to_string(),
+            "source1".to_string(),
+            None,
+        );
+        manager.record_warning(
+            WarningLevel::High,
+            "Warning 2".to_string(),
+            "source2".to_string(),
+            None,
+        );
+
+        let stats = manager.get_stats();
+        assert_eq!(stats.total_warnings, 2);
+        assert_eq!(stats.current_count, 2);
+    }
 }
