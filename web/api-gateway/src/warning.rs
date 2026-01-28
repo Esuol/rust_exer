@@ -609,7 +609,7 @@ mod tests {
     }
 
     #[test]
-    fn test_warning_stats() {
+    fn test_warning_stats_v2() {
         let config = WarningConfig::default();
         let manager = WarningManager::new(config);
 
@@ -629,5 +629,28 @@ mod tests {
         let stats = manager.get_stats();
         assert_eq!(stats.total_warnings, 2);
         assert_eq!(stats.current_count, 2);
+    }
+
+    #[test]
+    fn test_warning_deduplication_v3() {
+        let config = WarningConfig::default();
+        let manager = WarningManager::new(config);
+
+        manager.record_warning(
+            WarningLevel::Low,
+            "Duplicate warning".to_string(),
+            "source".to_string(),
+            None,
+        );
+        manager.record_warning(
+            WarningLevel::Low,
+            "Duplicate warning".to_string(),
+            "source".to_string(),
+            None,
+        );
+
+        let warnings = manager.get_warnings(None);
+        assert_eq!(warnings.len(), 1);
+        assert_eq!(warnings[0].count, 2);
     }
 }
