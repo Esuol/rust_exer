@@ -398,6 +398,22 @@ macro_rules! record_warning_v2 {
     };
 }
 
+/// 记录警告的便捷宏
+#[macro_export]
+macro_rules! record_warning_v3 {
+    ($manager:expr, $level:expr, $source:expr, $msg:expr) => {
+        $manager.record_warning($level, $msg.to_string(), $source.to_string(), None);
+    };
+    ($manager:expr, $level:expr, $source:expr, $msg:expr, $details:expr) => {
+        $manager.record_warning(
+            $level,
+            $msg.to_string(),
+            $source.to_string(),
+            Some($details),
+        );
+    };
+}
+
 /// 快速记录低级别警告的宏
 #[macro_export]
 macro_rules! warn_low {
