@@ -686,6 +686,11 @@ mod tests {
         assert_eq!(warnings[0].count, 2);
     }
 
+    // 获取警告统计信息
+    // pub fn get_stats(&self) -> WarningStats {
+    //     self.stats.lock().unwrap().clone()
+    // }
+
     #[test]
     fn test_warning_stats_v4() {
         let config = WarningConfig::default();
@@ -709,7 +714,7 @@ mod tests {
         assert_eq!(stats.current_count, 2);
     }
 
-    /// 获取警告统计信息
+    // 获取警告统计信息
     // pub fn get_stats(&self) -> WarningStats {
     //     self.stats.lock().unwrap().clone()
     // }
