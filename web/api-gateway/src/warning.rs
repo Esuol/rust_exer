@@ -708,4 +708,9 @@ mod tests {
         assert_eq!(stats.total_warnings, 2);
         assert_eq!(stats.current_count, 2);
     }
+
+    /// 获取警告统计信息
+    // pub fn get_stats(&self) -> WarningStats {
+    //     self.stats.lock().unwrap().clone()
+    // }
 }
