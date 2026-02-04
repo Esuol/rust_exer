@@ -591,6 +591,29 @@ mod tests {
     }
 
     #[test]
+    fn test_warning_deduplication_v5() {
+        let config = WarningConfig::default();
+        let manager = WarningManager::new(config);
+
+        manager.record_warning(
+            WarningLevel::Low,
+            "Duplicate warning".to_string(),
+            "source".to_string(),
+            None,
+        );
+        manager.record_warning(
+            WarningLevel::Low,
+            "Duplicate warning".to_string(),
+            "source".to_string(),
+            None,
+        );
+
+        let warnings = manager.get_warnings(None);
+        assert_eq!(warnings.len(), 1);
+        assert_eq!(warnings[0].count, 2);
+    }
+
+    #[test]
     fn test_warning_filter() {
         let config = WarningConfig::default();
         let manager = WarningManager::new(config);
