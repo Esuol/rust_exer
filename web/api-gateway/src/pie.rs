@@ -352,6 +352,33 @@ mod tests {
     }
 
     #[test]
+    fn test_calculate_pie_chart_v2() {
+        let data = vec![
+            PieDataItemInput {
+                label: "A".to_string(),
+                value: 50.0,
+                color: None,
+            },
+            PieDataItemInput {
+                label: "B".to_string(),
+                value: 30.0,
+                color: None,
+            },
+            PieDataItemInput {
+                label: "C".to_string(),
+                value: 20.0,
+                color: None,
+            },
+        ];
+
+        let result = calculate_pie_chart(&data, false).unwrap();
+        assert_eq!(result.total, 100.0);
+        assert_eq!(result.items.len(), 3);
+        assert_eq!(result.items[0].percentage, 50.0);
+        assert_eq!(result.items[0].angle, 180.0);
+    }
+
+    #[test]
     fn test_empty_data() {
         let data = vec![];
         let result = calculate_pie_chart(&data, false);
