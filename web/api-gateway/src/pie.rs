@@ -421,6 +421,13 @@ mod tests {
     }
 
     #[test]
+    fn test_empty_data_v5() {
+        let data = vec![];
+        let result = calculate_pie_chart(&data, false);
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn test_negative_value() {
         let data = vec![PieDataItemInput {
             label: "A".to_string(),
