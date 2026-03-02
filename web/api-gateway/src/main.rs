@@ -20,6 +20,7 @@ mod error;
 mod http;
 mod logger;
 mod pie;
+mod pop;
 mod proxy;
 mod request;
 mod response;
@@ -403,7 +404,10 @@ fn rocket() -> _ {
                 api::echo,
                 pie::calculate_pie_get,
                 pie::calculate_pie_post,
-                pie::pie_example
+                pie::pie_example,
+                pop::calculate_pop_get,
+                pop::calculate_pop_post,
+                pop::pop_example
             ],
         )
 }
