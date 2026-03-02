@@ -91,9 +91,7 @@ pub struct PopDataItemInput {
 ///
 /// # 错误
 /// 如果数据为空或包含无效数据，返回错误
-pub fn calculate_pop_stats(
-    data: &[PopDataItemInput],
-) -> Result<PopStatsResponse, PopError> {
+pub fn calculate_pop_stats(data: &[PopDataItemInput]) -> Result<PopStatsResponse, PopError> {
     if data.is_empty() {
         return Err(PopError::EmptyData);
     }
