@@ -18,6 +18,7 @@ mod code;
 mod debug;
 mod error;
 mod http;
+mod keep;
 mod logger;
 mod pie;
 mod pop;
@@ -407,7 +408,10 @@ fn rocket() -> _ {
                 pie::pie_example,
                 pop::calculate_pop_get,
                 pop::calculate_pop_post,
-                pop::pop_example
+                pop::pop_example,
+                keep::filter_keep_get,
+                keep::filter_keep_post,
+                keep::keep_example
             ],
         )
 }
