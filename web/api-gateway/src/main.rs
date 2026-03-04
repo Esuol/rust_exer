@@ -25,6 +25,7 @@ mod pop;
 mod proxy;
 mod request;
 mod response;
+mod server;
 mod utils;
 mod warning;
 
@@ -362,6 +363,7 @@ fn select_least_conn(route: &RouteConfig) -> Option<&UpstreamServer> {
 fn rocket() -> _ {
     // 初始化启动时间
     START_TIME.set(Instant::now()).unwrap();
+    server::init_start_time();
     // 加载配置
     let config = load_config().expect("Failed to load config");
     // 初始化日志系统
@@ -411,7 +413,11 @@ fn rocket() -> _ {
                 pop::pop_example,
                 keep::filter_keep_get,
                 keep::filter_keep_post,
-                keep::keep_example
+                keep::keep_example,
+                server::server_info,
+                server::server_status,
+                server::server_health,
+                server::server_stats
             ],
         )
 }
