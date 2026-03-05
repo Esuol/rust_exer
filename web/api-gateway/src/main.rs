@@ -26,6 +26,7 @@ mod proxy;
 mod request;
 mod response;
 mod server;
+mod service;
 mod utils;
 mod warning;
 
@@ -372,6 +373,9 @@ fn rocket() -> _ {
     // 初始化调试管理器
     let debug_manager = debug::DebugManager::new(config.debug.clone());
 
+    // 初始化服务管理器
+    let service_manager = service::ServiceManager::new();
+
     log::info!(
         "API Gateway starting on {}:{}",
         config.server.host,
@@ -394,6 +398,7 @@ fn rocket() -> _ {
         })
         .manage(config) // 添加状态管理
         .manage(debug_manager) // 添加调试管理器状态
+        .manage(service_manager) // 添加服务管理器状态
         .mount(
             "/",
             routes![
@@ -417,7 +422,14 @@ fn rocket() -> _ {
                 server::server_info,
                 server::server_status,
                 server::server_health,
-                server::server_stats
+                server::server_stats,
+                service::list_services,
+                service::get_service,
+                service::register_service,
+                service::update_service,
+                service::delete_service,
+                service::check_service_health,
+                service::service_example
             ],
         )
 }
