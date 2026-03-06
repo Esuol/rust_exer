@@ -27,6 +27,7 @@ mod request;
 mod response;
 mod server;
 mod service;
+mod table;
 mod utils;
 mod warning;
 
@@ -376,6 +377,9 @@ fn rocket() -> _ {
     // 初始化服务管理器
     let service_manager = service::ServiceManager::new();
 
+    // 初始化表格管理器
+    let table_manager = table::TableManager::new();
+
     log::info!(
         "API Gateway starting on {}:{}",
         config.server.host,
@@ -399,6 +403,7 @@ fn rocket() -> _ {
         .manage(config) // 添加状态管理
         .manage(debug_manager) // 添加调试管理器状态
         .manage(service_manager) // 添加服务管理器状态
+        .manage(table_manager) // 添加表格管理器状态
         .mount(
             "/",
             routes![
@@ -429,7 +434,18 @@ fn rocket() -> _ {
                 service::update_service,
                 service::delete_service,
                 service::check_service_health,
-                service::service_example
+                service::service_example,
+                table::list_tables,
+                table::get_table,
+                table::get_table_data,
+                table::get_table_stats,
+                table::create_table,
+                table::update_table,
+                table::delete_table,
+                table::add_row,
+                table::update_row,
+                table::delete_row,
+                table::table_example
             ],
         )
 }
