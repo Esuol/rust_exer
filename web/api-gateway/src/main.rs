@@ -25,6 +25,7 @@ mod pop;
 mod proxy;
 mod request;
 mod response;
+mod select;
 mod server;
 mod service;
 mod table;
@@ -445,7 +446,10 @@ fn rocket() -> _ {
                 table::add_row,
                 table::update_row,
                 table::delete_row,
-                table::table_example
+                table::table_example,
+                select::select_query,
+                select::select_query_get,
+                select::select_example
             ],
         )
 }
