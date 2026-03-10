@@ -29,6 +29,7 @@ mod select;
 mod server;
 mod service;
 mod table;
+mod test;
 mod utils;
 mod warning;
 
@@ -381,6 +382,9 @@ fn rocket() -> _ {
     // 初始化表格管理器
     let table_manager = table::TableManager::new();
 
+    // 初始化测试管理器
+    let test_manager = test::TestManager::new();
+
     log::info!(
         "API Gateway starting on {}:{}",
         config.server.host,
@@ -405,6 +409,7 @@ fn rocket() -> _ {
         .manage(debug_manager) // 添加调试管理器状态
         .manage(service_manager) // 添加服务管理器状态
         .manage(table_manager) // 添加表格管理器状态
+        .manage(test_manager) // 添加测试管理器状态
         .mount(
             "/",
             routes![
@@ -449,7 +454,17 @@ fn rocket() -> _ {
                 table::table_example,
                 select::select_query,
                 select::select_query_get,
-                select::select_example
+                select::select_example,
+                test::create_test_case,
+                test::list_test_cases,
+                test::get_test_case,
+                test::delete_test_case,
+                test::run_test_case,
+                test::create_test_suite,
+                test::list_test_suites,
+                test::run_test_suite,
+                test::get_test_results,
+                test::test_example
             ],
         )
 }
