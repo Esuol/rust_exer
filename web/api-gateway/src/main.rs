@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 mod api;
 mod calc;
 mod code;
+mod data;
 mod debug;
 mod error;
 mod http;
@@ -385,6 +386,9 @@ fn rocket() -> _ {
     // 初始化测试管理器
     let test_manager = test::TestManager::new();
 
+    // 初始化数据管理器
+    let data_manager = data::DataManager::new();
+
     log::info!(
         "API Gateway starting on {}:{}",
         config.server.host,
@@ -410,6 +414,7 @@ fn rocket() -> _ {
         .manage(service_manager) // 添加服务管理器状态
         .manage(table_manager) // 添加表格管理器状态
         .manage(test_manager) // 添加测试管理器状态
+        .manage(data_manager) // 添加数据管理器状态
         .mount(
             "/",
             routes![
@@ -464,7 +469,18 @@ fn rocket() -> _ {
                 test::list_test_suites,
                 test::run_test_suite,
                 test::get_test_results,
-                test::test_example
+                test::test_example,
+                data::store_data,
+                data::get_data,
+                data::update_data,
+                data::delete_data,
+                data::batch_store,
+                data::list_data,
+                data::get_stats,
+                data::cleanup_expired,
+                data::transform_data_endpoint,
+                data::validate_data_endpoint,
+                data::data_example
             ],
         )
 }
