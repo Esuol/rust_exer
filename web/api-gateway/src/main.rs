@@ -17,6 +17,7 @@ mod calc;
 mod code;
 mod data;
 mod debug;
+mod r#do;
 mod error;
 mod http;
 mod keep;
@@ -389,6 +390,9 @@ fn rocket() -> _ {
     // 初始化数据管理器
     let data_manager = data::DataManager::new();
 
+    // 初始化任务管理器
+    let task_manager = r#do::TaskManager::new();
+
     log::info!(
         "API Gateway starting on {}:{}",
         config.server.host,
@@ -415,6 +419,7 @@ fn rocket() -> _ {
         .manage(table_manager) // 添加表格管理器状态
         .manage(test_manager) // 添加测试管理器状态
         .manage(data_manager) // 添加数据管理器状态
+        .manage(task_manager) // 添加任务管理器状态
         .mount(
             "/",
             routes![
@@ -480,7 +485,14 @@ fn rocket() -> _ {
                 data::cleanup_expired,
                 data::transform_data_endpoint,
                 data::validate_data_endpoint,
-                data::data_example
+                data::data_example,
+                r#do::create_task,
+                r#do::list_tasks,
+                r#do::get_task,
+                r#do::delete_task,
+                r#do::execute_task,
+                r#do::cancel_task,
+                r#do::do_example
             ],
         )
 }
