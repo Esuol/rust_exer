@@ -25,6 +25,7 @@ mod logger;
 mod pie;
 mod pop;
 mod proxy;
+mod radio;
 mod request;
 mod response;
 mod select;
@@ -393,6 +394,9 @@ fn rocket() -> _ {
     // 初始化任务管理器
     let task_manager = r#do::TaskManager::new();
 
+    // 初始化选项管理器
+    let radio_manager = radio::RadioManager::new();
+
     log::info!(
         "API Gateway starting on {}:{}",
         config.server.host,
@@ -420,6 +424,7 @@ fn rocket() -> _ {
         .manage(test_manager) // 添加测试管理器状态
         .manage(data_manager) // 添加数据管理器状态
         .manage(task_manager) // 添加任务管理器状态
+        .manage(radio_manager) // 添加选项管理器状态
         .mount(
             "/",
             routes![
@@ -492,7 +497,16 @@ fn rocket() -> _ {
                 r#do::delete_task,
                 r#do::execute_task,
                 r#do::cancel_task,
-                r#do::do_example
+                r#do::do_example,
+                radio::create_group,
+                radio::list_groups,
+                radio::get_group,
+                radio::update_group,
+                radio::delete_group,
+                radio::add_option,
+                radio::select_option,
+                radio::get_selected_options,
+                radio::radio_example
             ],
         )
 }
