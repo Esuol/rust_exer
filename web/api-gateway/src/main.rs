@@ -31,6 +31,7 @@ mod response;
 mod select;
 mod server;
 mod service;
+mod ship;
 mod table;
 mod test;
 mod utils;
@@ -397,6 +398,9 @@ fn rocket() -> _ {
     // 初始化选项管理器
     let radio_manager = radio::RadioManager::new();
 
+    // 初始化物流/发货管理器
+    let ship_manager = ship::ShipManager::new();
+
     log::info!(
         "API Gateway starting on {}:{}",
         config.server.host,
@@ -425,6 +429,7 @@ fn rocket() -> _ {
         .manage(data_manager) // 添加数据管理器状态
         .manage(task_manager) // 添加任务管理器状态
         .manage(radio_manager) // 添加选项管理器状态
+        .manage(ship_manager) // 添加物流/发货管理器状态
         .mount(
             "/",
             routes![
@@ -506,7 +511,16 @@ fn rocket() -> _ {
                 radio::add_option,
                 radio::select_option,
                 radio::get_selected_options,
-                radio::radio_example
+                radio::radio_example,
+                ship::create_ship,
+                ship::list_ships,
+                ship::get_ship,
+                ship::update_ship,
+                ship::update_ship_status,
+                ship::add_ship_event,
+                ship::ship_stats,
+                ship::delete_ship,
+                ship::ship_example
             ],
         )
 }
