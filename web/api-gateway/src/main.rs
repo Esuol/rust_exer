@@ -22,6 +22,7 @@ mod error;
 mod http;
 mod keep;
 mod logger;
+mod perfomance;
 mod pie;
 mod pop;
 mod proxy;
@@ -512,6 +513,10 @@ fn rocket() -> _ {
                 radio::select_option,
                 radio::get_selected_options,
                 radio::radio_example,
+                perfomance::performance_summary,
+                perfomance::performance_reset,
+                perfomance::performance_benchmark,
+                perfomance::performance_example,
                 ship::create_ship,
                 ship::list_ships,
                 ship::get_ship,

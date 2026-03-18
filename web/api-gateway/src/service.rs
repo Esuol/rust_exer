@@ -87,7 +87,7 @@ pub struct ServiceDetailResponse {
 }
 
 /// 服务统计信息
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceStats {
     /// 总请求数
     pub total_requests: u64,
@@ -123,6 +123,7 @@ pub struct ServiceManager {
     stats: Arc<RwLock<HashMap<String, ServiceStats>>>,
 }
 
+#[allow(dead_code)]
 impl ServiceManager {
     /// 创建新的服务管理器
     pub fn new() -> Self {
@@ -245,21 +246,22 @@ impl ServiceManager {
     /// 检查服务健康状态
     pub async fn check_service_health(&self, service_id: &str) -> ServiceHealthResponse {
         let start_time = Instant::now();
-
-        let services = self.services.read().unwrap();
-        let service = match services.get(service_id) {
-            Some(s) => s.clone(),
-            None => {
-                return ServiceHealthResponse {
-                    service_id: service_id.to_string(),
-                    health: "unknown".to_string(),
-                    response_time_ms: None,
-                    checked_at: Utc::now().to_rfc3339(),
-                    message: "Service not found".to_string(),
-                };
+        // 用作用域确保 RwLockReadGuard 不会跨越 await，避免 future 非 Send
+        let service = {
+            let services = self.services.read().unwrap();
+            match services.get(service_id) {
+                Some(s) => s.clone(),
+                None => {
+                    return ServiceHealthResponse {
+                        service_id: service_id.to_string(),
+                        health: "unknown".to_string(),
+                        response_time_ms: None,
+                        checked_at: Utc::now().to_rfc3339(),
+                        message: "Service not found".to_string(),
+                    };
+                }
             }
         };
-        drop(services);
 
         // 执行健康检查
         let client = reqwest::Client::builder()
@@ -294,6 +296,10 @@ impl ServiceManager {
             s.health = health.clone();
             s.last_check = Some(Utc::now().to_rfc3339());
         }
+        drop(services);
+
+        // 记录一次健康检查的“请求”统计（便于观测）
+        self.record_request(service_id, health == "healthy", response_time);
 
         ServiceHealthResponse {
             service_id: service_id.to_string(),
