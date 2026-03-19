@@ -33,6 +33,7 @@ mod select;
 mod server;
 mod service;
 mod ship;
+mod skip;
 mod table;
 mod test;
 mod utils;
@@ -525,7 +526,9 @@ fn rocket() -> _ {
                 ship::add_ship_event,
                 ship::ship_stats,
                 ship::delete_ship,
-                ship::ship_example
+                ship::ship_example,
+                skip::skip_apply,
+                skip::skip_example
             ],
         )
 }
