@@ -19,6 +19,7 @@ mod data;
 mod debug;
 mod r#do;
 mod error;
+mod highlight;
 mod http;
 mod keep;
 mod logger;
@@ -528,7 +529,9 @@ fn rocket() -> _ {
                 ship::delete_ship,
                 ship::ship_example,
                 skip::skip_apply,
-                skip::skip_example
+                skip::skip_example,
+                highlight::highlight_endpoint,
+                highlight::highlight_example
             ],
         )
 }
