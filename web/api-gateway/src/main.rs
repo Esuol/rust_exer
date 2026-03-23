@@ -14,6 +14,7 @@ use std::time::{Duration, Instant};
 // 导入自定义模块
 mod api;
 mod calc;
+mod circle;
 mod code;
 mod data;
 mod debug;
@@ -531,7 +532,11 @@ fn rocket() -> _ {
                 skip::skip_apply,
                 skip::skip_example,
                 highlight::highlight_endpoint,
-                highlight::highlight_example
+                highlight::highlight_example,
+                circle::circle_calculate_get,
+                circle::circle_calculate_with_angle_get,
+                circle::circle_calculate_post,
+                circle::circle_example
             ],
         )
 }
